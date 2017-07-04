@@ -21,6 +21,8 @@ http.createServer(function (req, res) {
     });
   } else {
     res.writeHead(200, {'Content-Type': 'text/html'});
+    res.write('<h1>CORELS Web Interface</h1>');
+    res.write('<p>Please upload a zip file containing a .label file, a .out file, and a .minor file \(please see http:\/\/github.com\/nlarusstone\/corels for more details on the input format\).</p>');
     res.write('<form action="fileupload" method="post" enctype="multipart/form-data">');
     res.write('<input type="file" name="filetoupload"><br>');
     res.write('<input type="submit">');
