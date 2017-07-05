@@ -6,8 +6,14 @@ var ps = require('python-shell');
 
 http.createServer(function (req, res) {
   if (req.url == '/fileupload') {
+    var dir = "/tmp/corels/zips";
+    exec("mkdir -p " + dir, {}, function (err, stdout, stderr) {
+      if (err) throw err;
+      console.log(stdout);
+      console.log(stderr);
+    });
     var form = new formidable.IncomingForm();
-    form.uploadDir = "/tmp/corels/zips"
+    form.uploadDir = dir;
     form.parse(req, function (err, fields, files) {
       var path = files.filetoupload._writeStream.path;
       res.write("Optimal rule list:\n");
