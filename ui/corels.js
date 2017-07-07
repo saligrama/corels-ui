@@ -16,13 +16,14 @@ http.createServer(function (req, res) {
     form.uploadDir = dir;
     form.parse(req, function (err, fields, files) {
       var path = files.filetoupload._writeStream.path;
+      var command = "python3 interface.py " + path;
       res.write("Optimal rule list:\n");
-      ps.run("interface.py", { args: [path] }, function (err, data) {
+      exec(command, function (err, stdout, stderr) {
 	if (err) throw err;
-	data.toString().split("\\n").forEach(function (value) {
-	  res.write(value + "\n");
-	});
-	res.end();
+        stdout.toString().split("\\n").forEach(function (value) {
+          res.write(value + "\n");
+        });
+        res.end();
       });
     });
   } else {

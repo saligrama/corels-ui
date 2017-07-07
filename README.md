@@ -1,5 +1,5 @@
 # CORELS UI
-Web user interface for nlarusstone/corels using NodeJS and Python 3. Requires NodeJS modules `formidable` and `python-shell`.
+Web user interface for nlarusstone/corels using NodeJS and Python 3. Requires NodeJS module `formidable`.
 
 # Installation
 Clone the repository.
@@ -15,7 +15,6 @@ Compile the CORELS code.
 You must have NodeJS and Python 3 installed. Then, install required NodeJS libraries:
 
     npm install formidable
-    npm install python-shell
 
 # Usage
 
