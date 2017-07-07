@@ -2,7 +2,6 @@ var http = require('http');
 var util = require('util');
 var formidable = require('formidable');
 var exec = require('child_process').exec;
-var ps = require('python-shell');
 
 http.createServer(function (req, res) {
   if (req.url == '/fileupload') {
