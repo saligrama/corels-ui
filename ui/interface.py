@@ -8,16 +8,18 @@ def extract_zip (z, dirname):
 
 def get_corels_output (fp):
 	p = fp[0]
-	p.sort()
 	dirname = fp[1]
-	label = p[0]
-	if len(p) == 1:
-		out = p[1]
-		minor = ""
-	else:
-		out = p[2]
-		minor = p[1]
-	args = dirname + out + " " + dirname + label + " " + dirname + minor
+	for i in p:
+		a = i.split('.')
+		if a[1] == "out":
+			out = dirname + i
+		elif a[1] == "label":
+			label = dirname + i
+		elif a[1] == "minor":
+			minor = dirname + i
+	if (len(p) == 2):
+		 minor = ""
+	args = out + " " + label + " " + minor
 	command = "../corels/src/corels -r 0.015 -c 2 -p 1 " + args
 	corels_output = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None, shell=True).communicate()
 	return filter(corels_output)
