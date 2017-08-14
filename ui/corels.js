@@ -1,4 +1,5 @@
 // builtin libraries
+var spawn = require('child_process').spawn;
 var exec = require('child_process').exec;
 
 // external libraries
@@ -10,8 +11,9 @@ var S = require('string');
 var app = express();
 
 // create upload directory if it doesn't exist
-var dir = "/tmp/corels/files/"
-exec("mkdir -p " + dir, {}, function (err, stdout, stderr) {
+var dir_upload = "/tmp/corels/files/"
+var dir_output = " /tmp/corels/output";
+exec("mkdir -p " + dir_upload + dir_output, {}, function (err, stdout, stderr) {
  if (err) throw err;
 });
 
@@ -21,7 +23,7 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // parse files
-app.use(multer({ dest : dir }).fields([{name: 'out'}, {name: 'label'}, {name: 'minor'}]));
+app.use(multer({ dest : dir_upload }).fields([{name: 'out'}, {name: 'label'}, {name: 'minor'}]));
 
 // display form
 app.get('/', function (req, res) {
@@ -30,40 +32,47 @@ app.get('/', function (req, res) {
 
 app.post('/fileupload', function (req, res) {
 
-  // stringify parameters
-  var args = " -r ";
-  for (var arg in req.body) {
-    if (arg != "submit") args += req.body[arg] + " ";
+  res.writeHead(200, {'Content-Type': 'text/plain', 'Transfer-Encoding': 'chunked'});
+
+  // add parameters to array
+  var args = [];
+  var vopt = false;
+  var vstr = "";
+  var keys = Object.keys(req.body), len = keys.length, i = 0;
+  while (i < len) {
+    var arg = keys[i];
+    if (arg == "regularization") {
+      args.push("-r " + req.body[arg]);
+    } else if (arg == "max_nodes") {
+      args.push("-n " + req.body[arg]);
+    } else if (S("rule|label|samples|progress|log").contains(arg)) {
+      if (!vopt) {
+        vstr += "-v ";
+        vopt = true;
+      }
+      vstr += req.body[arg];
+      if (i < len - 1) vstr += ",";
+      else args.push(vstr);
+    } else if (arg != "submit") {
+      args.push(req.body[arg]);
+    }
+    i++;
   }
 
   // get input file paths
-  var outpath = req.files.out[0].path + " ";
-  var labelpath = req.files.label[0].path + " ";
-  var minorpath = "";
-  if (req.files.minor) minorpath = req.files.minor[0].path;
-
-  res.write("Optimal rule list:\n");
+  args.push(req.files.out[0].path);
+  args.push(req.files.label[0].path);
+  if (req.files.minor) args.push(req.files.minor[0].path);
 
   // run CORELS command
-  var command = "../corels/src/corels " + args + outpath + labelpath + minorpath;
-  exec(command, function (err, stdout, stderr) {
-    if (err) throw err;
+  var command = "../bbcache/src/corels";
 
-    // capture output as string.js string for easier manipulation
-    // keep only the optimal rule list
-    var output = S(stdout.toString()).between("OPTIMAL RULE LIST\n", "writing");
-
-    // replace newlines with actual line breaks (otherwise it will display as \n characters)
-    output.toString().split("\\n").forEach(function (value) {
-      res.write(value + "\n");
-    });
-
-    // remove uploaded files
-    exec("rm " + outpath + labelpath + minorpath, function (err, stdout, stderr) {
-      if (err) throw err;
-    });
-
-    // end response
+  var corels = spawn(command, args);
+  corels.stdout.on('data', function (data) {
+    res.write(data.toString());
+  });
+  corels.on('close', function () {
+    res.write("~~~~~~DONE~~~~~");
     res.end();
   });
 })

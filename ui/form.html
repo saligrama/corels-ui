@@ -12,96 +12,160 @@
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <html>
-   <body>
-      <div class="container">
-         <h1 style="text-align: center"><b>CORELS: Learning Certifiably Optimal RulE ListS</b></h1>
-         <h4 style="text-align: center">Please select options and upload data files.</h4>
-         <br>
-         <div id="data_format" class="modal fade" style="width:50%;margin:0 auto" role="dialog">
+
+<head>
+    <title>CORELS: Learning Certifiably Optimal RulE ListS</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1 style="text-align: center"><b>CORELS: Learning Certifiably Optimal RulE ListS</b></h1>
+        <h4 style="text-align: center">Please select options and upload data files.</h4>
+        <br>
+        <div id="data_format" class="modal fade" style="width:50%;margin:0 auto" role="dialog">
             <div class="modal-content">
-               <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal">&times;</button>
-                  <h4 class="modal-title">Data formatting tips</h4>
-               </div>
-               <div class="modal-body">
-                  <p><b>General data format: </b></p>
-                  <ul>
-                     <li>The input data files must be space-delimited text.</li>
-                     <li>Each line contains <code>N+1</code> fields, where <code>N</code> is the number of observations, and ends with <code>\n</code> (including the last line).</li>
-                     <li>In each line, the last <code>N</code> fields are <code>0</code>'s and <code>1</code>'s, and encode a bit vector; the first field has the format <code>{text-description}</code>, where the text between the brackets provides a description of the bit vector.</li>
-                  </ul>
-                  <p><b>Training data file (extension <code>".out"</code>):</b></p>
-                  <ul>
-                     <li>Encode <code>M</code> antecedents as <code>M</code> space-delimited lines of text. Each line contains <code>N+1</code> fields.</li>
-                     <li>The first field has the format <code>{antecedent-description}</code>, where the text between the brackets describes the antecedent, e.g., <code>{hair-color:brown}</code>, or <code>{age:20-25}</code>.</li>
-                     <li>The remaining <code>N</code> fields indicate whether the antecedent is true or false for the <code>N</code> observations.</li>
-                  </ul>
-                  <p><b>Training labels (extension ".label"):</b></p>
-                  <ul>
-                     <li>Encode labels as two space-delimited lines of text. The first line starts with a description of the negative class label, e.g., <code>{label=0}</code>; the remaining <code>N</code> fields indicate which of the <code>N</code> observations have this label.</li>
-                     <li>The second line contains analogous (redundant) information for the positive class label.</li>
-                  </ul>
-                  <p><b>Minor file (extension ".minor"):</b> Bit vector to support use of the equivalent points bound (optional, see <i>Theorem 20 in Section 3.14</i> of our paper).</p>
-               </div>
-               <div class="modal-footer">
-                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-               </div>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Data formatting tips</h4>
+                </div>
+                <div class="modal-body">
+                    <p><b>General data format: </b></p>
+                    <ul>
+                        <li>The input data files must be space-delimited text.</li>
+                        <li>Each line contains <code>N+1</code> fields, where <code>N</code> is the number of observations, and ends with <code>\n</code> (including the last line).</li>
+                        <li>In each line, the last <code>N</code> fields are <code>0</code>'s and <code>1</code>'s, and encode a bit vector; the first field has the format <code>{text-description}</code>, where the text between the brackets provides a description of the bit vector.</li>
+                    </ul>
+                    <p><b>Training data file (extension <code>".out"</code>):</b></p>
+                    <ul>
+                        <li>Encode <code>M</code> antecedents as <code>M</code> space-delimited lines of text. Each line contains <code>N+1</code> fields.</li>
+                        <li>The first field has the format <code>{antecedent-description}</code>, where the text between the brackets describes the antecedent, e.g., <code>{hair-color:brown}</code>, or <code>{age:20-25}</code>.</li>
+                        <li>The remaining <code>N</code> fields indicate whether the antecedent is true or false for the <code>N</code> observations.</li>
+                    </ul>
+                    <p><b>Training labels (extension ".label"):</b></p>
+                    <ul>
+                        <li>Encode labels as two space-delimited lines of text. The first line starts with a description of the negative class label, e.g., <code>{label=0}</code>; the remaining <code>N</code> fields indicate which of the <code>N</code> observations have this label.</li>
+                        <li>The second line contains analogous (redundant) information for the positive class label.</li>
+                    </ul>
+                    <p><b>Minor file (extension ".minor"):</b> Bit vector to support use of the equivalent points bound (optional, see <i>Theorem 20 in Section 3.14</i> of our paper).</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
             </div>
-         </div>
-         <div class="container">
+        </div>
+        <div class="container">
             <form action="/fileupload" method="post" enctype="multipart/form-data">
-               <h3>Parameters</h3>
-               <div class="row">
-                  <div class="col-sm-4 flex-first">
-                     <label for="reg_coeff">Regularization Coefficient</label>
-                     <input type="number" step="0.001" min=0 id="reg_coeff" name="reg_coeff" class="form-control" required/>
-                  </div>
-                  <div class="col-sm-4 flex-unordered">
-                     <label for="sp">Search Policy</label>
-                     <select id="sp" name="sp" class="form-control" required/>
-                         <option value="-c 1">Prioritize by curiosity</option>
-                         <option value="-c 2" selected="selected">Prioritize by lower bound</option>
-                         <option value="-c 3">Prioritize by objective</option>
-                         <option value="-c 4">Depth-first search</option>
-                         <option value="-b">Breadth-first search</option>
-                     </select>
-                  </div>
-                  <div class="col-sm-4 flex-last">
-                     <label for="pam">Symmetry-aware map type</label>
-                     <select id="pam" name="pam" class="form-control" />
-                         <option value="-p 0" selected="selected">No symmetry-aware map</option>
-                         <option value="-p 1">Permutation map</option>
-                         <option value="-p 2">Captured vector map</option>
-                     </select>
-                  </div>
-               </div>
-               <br>
-               <div class="row">
-                  <div class="col-sm-1">
-                     <h3>Data</h3>
-                  </div>
-                  <div style="height:50px; line-height:60px" class="col-sm-3">
-                     <a href="#" data-toggle="modal" data-target="#data_format">Show data formatting tips</a>
-                  </div>
-               </div>
-               <div class="row">
-                  <div class="col-sm-4 flex-first">
-                     <label for="out">Training data (extension ".out")</label>
-                     <input type="file" id="out" name="out" class="form-control" required>
-                  </div>
-                  <div class="col-sm-4 flex-unordered">
-                     <label for="label">Training labels (extension ".label")</label>
-                     <input type="file" id="label" name="label" class="form-control" required>
-                  </div>
-                  <div class="col-sm-4 flex-last">
-                     <label for="label">Minor file (optional, extension ".minor")</label>
-                     <input type="file" id="minor" name="minor" class="form-control">
-                  </div>
-               </div>
-               <br>
-               <input class="btn btn-primary" type="submit">
+                <div class="row">
+                    <div class="col-lg-4 flex-first">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Parameters</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="col-lg-12">
+                                    <div class="row">
+                                        <label for="regularization">Regularization Coefficient</label>
+                                        <input type="number" step="0.001" min=0 id="regularization" name="regularization" class="form-control" value="0.015" required/>
+                                    </div>
+                                    <br>
+                                    <div class="row">
+                                        <label for="max_nodes">Max number of nodes</label>
+                                        <input type="number" min=10000 id="max_nodes" name="max_nodes" class="form-control" value=10000 required/>
+                                    </div>
+                                    <br>
+                                    <div class="row">
+                                        <label for="search_policy">Search Policy</label>
+                                        <select id="search_policy" name="search_policy" class="form-control" required/>
+                                            <option value="-c 1">Prioritize by curiosity</option>
+                                            <option value="-c 2" selected="selected">Prioritize by lower bound</option>
+                                            <option value="-c 3">Prioritize by objective</option>
+                                            <option value="-c 4">Depth-first search</option>
+                                            <option value="-b">Breadth-first search</option>
+                                        </select>
+                                    </div>
+                                    <br>
+                                    <div class="row">
+                                        <label for="prefix_map">Symmetry-aware map type</label>
+                                        <select id="prefix_map" name="prefix_map" class="form-control" />
+                                            <option value="-p 0" selected="selected">No symmetry-aware map</option>
+                                            <option value="-p 1">Permutation map</option>
+                                            <option value="-p 2">Captured vector map</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 flex-unordered">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Data</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="col-lg-12">
+                                    <div class="row">
+                                        <label for="out">Training data (extension ".out")</label>
+                                        <input type="file" id="out" name="out" class="form-control" required>
+                                    </div>
+                                    <br>
+                                    <div class="row">
+                                        <label for="label">Training labels (extension ".label")</label>
+                                        <input type="file" id="label" name="label" class="form-control" required>
+                                    </div>
+                                    <br>
+                                    <div class="row">
+                                        <label for="label">Equivalent Points file (optional, extension ".minor")</label>
+                                        <input type="file" id="minor" name="minor" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel-footer">
+                                <a href="#" data-toggle="modal" data-target="#data_format">Show data formatting tips</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Debug level</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="col-lg-12">
+                                    <div class="row">
+                                        <div class="checkbox">
+                                            <label><input type="checkbox" id="progress" name="progress" value="progress">Algorithm progress</label>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="checkbox">
+                                            <label><input type="checkbox" id="log" name="log" value="log">Log to files</label>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="checkbox">
+                                            <label><input type="checkbox" id="rule" name="rule" value="rule">Print rules</label>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="checkbox">
+                                            <label><input type="checkbox" id="label" name="label" value="label">Print labels</label>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="checkbox">
+                                            <label><input type="checkbox" id="samples" name="samples" value="samples">Print samples (Warning: LOTS OF OUTPUT)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <input class="btn btn-primary" type="submit">
             </form>
-         </div>
-      </div>
-   </body>
+        </div>
+    </div>
+</body>
+
 </html>
