@@ -12,8 +12,7 @@ var app = express();
 
 // create upload directory if it doesn't exist
 var dir_upload = "/tmp/corels/files/"
-var dir_output = " /tmp/corels/output";
-exec("mkdir -p " + dir_upload + dir_output, {}, function (err, stdout, stderr) {
+exec("mkdir -p " + dir_upload, {}, function (err, stdout, stderr) {
  if (err) throw err;
 });
 
@@ -74,6 +73,9 @@ app.post('/fileupload', function (req, res) {
   corels.on('close', function () {
     res.write("~~~~~~DONE~~~~~");
     res.end();
+    exec("rm -rf " + req.files.out[0].path + " " + req.files.label[0].path + " " + req.files.minor[0].path, {}, function (err, stdout, stderr) {
+      if (err) throw err;
+    });
   });
 })
 
