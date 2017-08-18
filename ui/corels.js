@@ -68,7 +68,7 @@ app.post('/fileupload', function (req, res) {
   if (req.files.minor) args.push(req.files.minor[0].path);
 
   // run CORELS command
-  var command = __dirname + "../corels/src/corels";
+  var command = __dirname + "/../corels/src/corels";
 
   var corels = spawn(command, args, { shell: true, env: { 'LD_LIBRARY_PATH': '/usr/local/lib:/usr/lib:/usr/local/lib64:/usr/lib64' }});
   corels.stdout.on('data', function (data) {
