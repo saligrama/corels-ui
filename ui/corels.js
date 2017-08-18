@@ -46,7 +46,7 @@ app.post('/fileupload', function (req, res) {
       args.push("-n " + req.body[arg]);
     } else if (S("rule|label|samples|progress|log").contains(arg)) {
       if (!vopt) {
-        vstr += "-v ";
+        args.push("-v");
         vopt = true;
       }
       vstr += req.body[arg];
@@ -58,20 +58,24 @@ app.post('/fileupload', function (req, res) {
     i++;
   }
 
+  if (!vopt) {
+    args.push("-v");
+    args.push("silent");
+  }
   // get input file paths
   args.push(req.files.out[0].path);
   args.push(req.files.label[0].path);
   if (req.files.minor) args.push(req.files.minor[0].path);
 
   // run CORELS command
-  var command = "../bbcache/src/corels";
+  var command = __dirname + "../corels/src/corels";
 
-  var corels = spawn(command, args);
+  var corels = spawn(command, args, { shell: true, env: { 'LD_LIBRARY_PATH': '/usr/local/lib:/usr/lib:/usr/local/lib64:/usr/lib64' }});
   corels.stdout.on('data', function (data) {
     res.write(data.toString());
   });
   corels.on('close', function () {
-    res.write("~~~~~~DONE~~~~~");
+    res.write("\n----------DONE----------");
     res.end();
     exec("rm -rf " + req.files.out[0].path + " " + req.files.label[0].path + " " + req.files.minor[0].path, {}, function (err, stdout, stderr) {
       if (err) throw err;
