@@ -21,6 +21,7 @@
     <div class="container">
         <h1 style="text-align: center"><b>CORELS: Learning Certifiably Optimal RulE ListS</b></h1>
         <h4 style="text-align: center">Please select options and upload data files.</h4>
+        <h4 style="text-align: center"><a href="#" data-toggle="modal" data-target="#exp">About CORELS</a></h4>
         <br>
         <div id="data_format" class="modal fade" style="width:50%;margin:0 auto" role="dialog">
             <div class="modal-content">
@@ -49,6 +50,35 @@
                     <p><b>Minor file (extension ".minor"):</b> Bit vector to support use of the equivalent points bound (optional, see <i>Theorem 20 in Section 3.14</i> of our paper).</p>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+        <div id="exp" class="modal fade" style="width:50%;margin:0 auto" role="dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">About CORELS</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        CORELS is a custom discrete optimization technique for building rule lists over a categorical  feature space. Our algorithm provides the optimal solution, with a certificate of optimality. By leveraging algorithmic bounds, efficient data structures, and computational reuse, we achieve several orders of magnitude speedup in time and a massive reduction of memory consumption. Our approach produces optimal rule lists on practical problems in seconds. This framework is a novel alternative to CART and other decision tree methods.
+                    </p>
+
+                    <p>
+                        This website is a web front end for the CORELS algorithm. Here you can select parameters for the algorithm to run under:
+                    </p>
+                        <ul>
+                            <li>The regularization coefficient can be thought of as adding a penalty equivalent to misclassifying 1% of data when increasing a rule list's length by one association rule.</li>
+                            <li>The search policy drop-down tells the algorithm how to order the candidate search nodes in the tree; different policies consider different nodes the "best" possible remaining node.</li>
+                            <li>The symmetry-aware map supports symmetry-aware pruning; the prefix map is recommended to use for algorithm speedup.</li>
+                            <li>You can adjust the max number of nodes to change the point at which the algorithm should stop if a certifiably optimal rule list hasn't been found yet. A lower value will result in faster execution.</li>
+                        </ul>
+                         The various data files are described <a href="#" data-toggle="modal" data-target="#data_format" data-dismiss="modal">here</a>. An update to this website is coming soon with more parameters to select, as well as a better way to display algorithm output.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <p style="text-align: left">Website created by Aditya Saligrama.</p>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div>
