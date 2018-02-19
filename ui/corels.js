@@ -11,7 +11,7 @@ var S = require('string');
 var app = express();
 
 // create upload directory if it doesn't exist
-var dir_upload = "/tmp/corels/files/"
+var dir_upload = "/tmp/corels/files/";
 exec("mkdir -p " + dir_upload, {}, function (err, stdout, stderr) {
  if (err) throw err;
 });
@@ -22,16 +22,43 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // parse files
-app.use(multer({ dest : dir_upload }).fields([{name: 'out'}, {name: 'label'}, {name: 'minor'}]));
+app.use(multer({ dest : dir_upload }).fields([{name: 'out'}, {name: 'label'}, {name: 'minor'}, {name: 'csv'}]));
 
 // display form
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/form.html');
-})
+});
 
 app.post('/fileupload', function (req, res) {
 
   res.writeHead(200, {'Content-Type': 'text/plain', 'Transfer-Encoding': 'chunked'});
+
+  var out_path = "", label_path = "", minor_path = "", csv_path = "";
+
+  if(req.files.out)
+    out_path = req.files.out[0].path;
+  if(req.files.label)
+    label_path = req.files.label[0].path;
+  if(req.files.minor)
+    minor_path = req.files.minor[0].path;
+
+  if(req.files.csv)
+    csv_path = req.files.csv[0].path;
+
+  if(csv_path) {
+    out_path = dir_upload + "data.out";
+    label_path = dir_upload + "data.label";
+
+    if(req.body.make_minor)
+      minor_path = dir_upload + "data.minor";
+    else
+      minor_path = "";
+
+    var command = __dirname + "/../utils/convcsv " + csv_path + " " + out_path + " " + label_path + " " + minor_path;
+    exec(command, function(err, stdout, stderr) {
+      if (err) throw err;
+    });
+  }
 
   // add parameters to array
   var args = [];
@@ -63,9 +90,9 @@ app.post('/fileupload', function (req, res) {
     args.push("silent");
   }
   // get input file paths
-  args.push(req.files.out[0].path);
-  args.push(req.files.label[0].path);
-  if (req.files.minor) args.push(req.files.minor[0].path);
+  args.push(out_path);
+  args.push(label_path);
+  if (minor_path) args.push(minor_path);
 
   // run CORELS command
   var command = __dirname + "/../corels/src/corels";
@@ -77,14 +104,14 @@ app.post('/fileupload', function (req, res) {
   corels.on('close', function () {
     res.write("\n----------DONE----------");
     res.end();
-    exec("rm -rf " + req.files.out[0].path + " " + req.files.label[0].path + " " + req.files.minor[0].path, {}, function (err, stdout, stderr) {
+    exec("rm -rf " + out_path + " " + label_path + " " + minor_path, {}, function (err, stdout, stderr) {
       if (err) throw err;
     });
   });
-})
+});
 
 // listen on port 8080
 var server = app.listen(8080, function () {
   var host = server.address().address
   var port = server.address().port
-})
+});
