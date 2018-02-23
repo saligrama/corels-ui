@@ -23,7 +23,7 @@ us_t getus()
 
 void usage(const char *name)
 {
-  printf("USAGE: %s [-s min_support] [-c max_cardinality] [-m] [-v] [-h] csv_file out_file label_file\n", name);
+  printf("USAGE: %s [-s min_support] [-c max_cardinality] [-v] [-h] csv_file out_file label_file\n", name);
 }
 
 int getnextperm(int n, int r, int *arr, int first)
@@ -95,8 +95,8 @@ int main(int argc, char **argv)
       break;
     case 's':
       min_support = atof(optarg);
-      if(min_support >= 1.0 || min_support <= 0.0) {
-        printf("Minimum support must be less than 1 and greater than 0\n");
+      if(min_support > 0.5 || min_support < 0.0) {
+        printf("Minimum support must be less than or equal to 0.5 and greater than or equal to 0\n");
         return 1;
       }
       break;
@@ -427,7 +427,7 @@ end:
   printf("Generated %d rules\n", ntotal_rules);
 
   long double diff = (long double)(getus() - start) / (long double)1000000.0;
-  printf("Done after %Lf seconds\n", diff);
+  printf("Mining done after %Lf seconds\n", diff);
 
   return ret;
 }
