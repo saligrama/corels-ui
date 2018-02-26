@@ -1,1 +1,0 @@
-{age:23-25,priors:2-3}~1;{age:21-22,sex:Female-not}~1;{age:18-20-not,priors:>3-not}~0;default~1

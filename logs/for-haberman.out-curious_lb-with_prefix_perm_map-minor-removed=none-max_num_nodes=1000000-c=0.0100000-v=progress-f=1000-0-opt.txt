@@ -1,1 +1,0 @@
-{nodes1-9:1,age>69:0}~1;{year>65:1,age60-69:0}~1;{nodes0:0,age<40:0}~0;default~1

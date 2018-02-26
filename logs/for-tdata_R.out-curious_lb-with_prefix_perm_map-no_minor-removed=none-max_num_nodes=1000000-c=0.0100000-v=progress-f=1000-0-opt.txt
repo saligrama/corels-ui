@@ -1,1 +1,0 @@
-{c1=x,c2=x,c3=x}~1;{c3=x,c6=x,c9=x}~1;{c7=x,c8=x,c9=x}~1;{c5=x}~1;default~0
