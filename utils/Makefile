@@ -9,3 +9,6 @@ mine: mine.c
 
 minority: minority.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+clean: mine minority
+  rm mine minority

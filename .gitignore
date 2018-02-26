@@ -3,4 +3,6 @@ ui/node_modules
 ui/queue.txt
 utils/mine
 utils/minority
+utils/test
+utils/test_py
 logs/
