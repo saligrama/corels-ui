@@ -24,12 +24,6 @@ exec("mkdir -p " + dir_upload_root, {}, function (err, stdout, stderr) {
 
 app.use(express.static('public'));
 
-// parse text fields
-//app.use(bodyParser.urlencoded({ extended: false }));
-
-// parse files
-//app.use(multer({ dest : dir_upload }).fields([{name: 'out'}, {name: 'label'}, {name: 'minor'}, {name: 'csv'}]));
-
 var used_ids = [];
 
 function nextid() {
@@ -48,10 +42,6 @@ app.get('/', function (req, res) {
   return res.sendFile(__dirname + '/form.html');
 });
 
-/*app.get('/app.js', (req, res, next) => {
-  return res.sendFile(__dirname + '/client/app.js');
-});*/
- 
 app.get('/socket.io.js', (req, res, next) => {
   return res.sendFile(__dirname + '/node_modules/socket.io-client/dist/socket.io.js');
 });
@@ -73,7 +63,6 @@ function run_corels(params, out_path, label_path, minor_path, socket, end) {
   args.push(label_path);
   if(minor_path)
     args.push(minor_path);
-  console.log(params.verbosity);
 
   socket.emit('console', '\nRunning corels\n');
   var corels = spawn(command, args, { shell: true });
@@ -86,11 +75,10 @@ function run_corels(params, out_path, label_path, minor_path, socket, end) {
     end();
   });
   corels.stderr.on('data', function(data) {
-    console.log(data.toString());
+    socket.emit('console', data.toString());
   });
   corels.stdout.on('data', function(data) {
     socket.emit('console', data.toString());
-    console.log(data.toString());
   });
 }
 
@@ -122,19 +110,71 @@ io.on('connection', function(socket) {
   var label_path = "";
   var minor_path = "";
 
+  var corels_process = null;
+  var mine_process = null;
+  var minor_process = null;
+
+  function done_run() {
+    running = false;
+    out_path = "";
+    label_path = "";
+    minor_path = "";
+    socket.emit('done-run');
+  }
+
+  function run_corels(params, out_path, label_path, minor_path, socket, end) {
+    var args = [];
+    var command = __dirname + "/../corels/src/corels";
+    
+    args.push("-r " + params.regularization);
+    args.push("-n " + params.max_nodes);
+    args.push("-v " + params.verbosity);
+    args.push(params.search_policy);
+    args.push(params.prefix_map);
+    args.push(out_path);
+    args.push(label_path);
+    if(minor_path)
+      args.push(minor_path);
+
+    socket.emit('console', '\nRunning corels\n');
+    corels_process = spawn(command, args, { shell: true });
+
+    corels_process.on('close', function() {
+      corels_process = null;
+      exec("rm -rf " + out_path + " " + label_path + " " + minor_path, {}, function(err, stdout, stderr) {
+        if(err) console.log(err);
+      });
+
+      end();
+    });
+    corels_process.stderr.on('data', function(data) {
+      socket.emit('console', data.toString());
+    });
+    corels_process.stdout.on('data', function(data) {
+      socket.emit('console', data.toString());
+    });
+  }
+
   uploader.on('start', function(fileInfo) {
+    console.log("Begun uploading: ");
     console.log(fileInfo);
   });
 
   socket.on('reset', function() {
     running = false;
+    if(minor_process)
+      minor_process.kill();
+    if(corels_process)
+      corels_process.kill();
+    if(mine_process)
+      mine_process.kill();
+    exec("rm -f " + dir_upload + "/*");
     socket.emit('console', '\nReset\n');
   });
 
   uploader.on('complete', function(fileInfo) {
     if(fileInfo.data.mine && fileInfo.data.type == "csv") {
       var csv_path = fileInfo.uploadDir;
-      console.log(csv_path);
       out_path = dir_upload + "/out_file.out";
       label_path = dir_upload + "/label_file.label";
       minor_path = "";
@@ -147,27 +187,53 @@ io.on('connection', function(socket) {
       args.push(label_path);
       var command = __dirname + "/../utils/mine";
 
-      console.log(out_path);
-
       socket.emit('console', '\nRunning miner\n');
-      var mine = spawn(command, args, { shell: true });
+      mine_process = spawn(command, args, { shell: true });
 
-      mine.on('close', function() {
+      var fdata = Object.assign({}, fileInfo.data);
+
+      mine_process.on('close', function() {
+        mine_process = null;
         exec("rm -f " + csv_path, {}, function(err, stdout, stderr) {
           if(err) console.log(err);
         });
-      
-        run_corels(fileInfo.data, out_path, label_path, minor_path, socket, function() {
-          running = false;
-          out_path = "";
-          label_path = "";
-          minor_path = "";
-          socket.emit('done-run');
-        });
+
+        if(fdata.make_minor) {
+          var minor_args = [];
+          minor_args.push(out_path);
+          minor_args.push(label_path);
+
+          minor_path = dir_upload + "/minor_file.minor";
+          minor_args.push(minor_path);
+
+          var minor_command = __dirname + "/../utils/minority";
+
+          minor_process = spawn(minor_command, minor_args, { shell: true });
+
+          minor_process.on('close', function() {
+            minor_process = null;
+            run_corels(fdata, out_path, label_path, minor_path, socket, function() {
+              done_run();
+            });
+          });
+          minor_process.stdout.on('data', function(data) {
+            socket.emit('console', data.toString());
+          });
+          minor_process.stderr.on('data', function(data) {
+            socket.emit('console', data.toString());
+          });
+        }
+        else {
+          run_corels(fdata, out_path, label_path, minor_path, socket, function() {
+            done_run();
+          });
+        }
       });
-      mine.stdout.on('data', function(data) {
+      mine_process.stdout.on('data', function(data) {
         socket.emit('console', data.toString());
-        console.log(data.toString());
+      });
+      mine_process.stderr.on('data', function(data) {
+        socket.emit('console', data.toString());
       });
     }
     else if(!fileInfo.data.mine && (fileInfo.data.type == "out" || fileInfo.data.type == "label" || fileInfo.data.type == "minor")) {
@@ -178,139 +244,44 @@ io.on('connection', function(socket) {
       else if(fileInfo.data.type == "minor")
         minor_path = fileInfo.uploadDir;
 
+      // use_minor is true only if a minor file is to be provided, and is independent of
+      // make_minor, which instead indicates that the minority file be generated if not provided
       if(out_path && label_path && (!fileInfo.data.use_minor || minor_path)) {
-        run_corels(fileInfo.data, out_path, label_path, minor_path, socket, function() {
-          running = false;
-          out_path = "";
-          label_path = "";
-          minor_path = "";
-          socket.emit('done-run');
-        });
+        if(!fileInfo.data.use_minor && fileInfo.data.make_minor) {
+          var minor_args = [];
+          minor_args.push(out_path);
+          minor_args.push(label_path);
+
+          minor_path = dir_upload + "/minor_file.minor";
+          minor_args.push(minor_path);
+
+          var minor_command = __dirname + "/../utils/minority";
+
+          minor_process = spawn(minor_command, minor_args, { shell: true });
+
+          var fdata = Object.assign({}, fileInfo.data);
+
+          minor_process.on('close', function() {
+            minor_process = null;
+            run_corels(fdata, out_path, label_path, minor_path, socket, function() {
+              done_run();
+            });
+          });
+          minor_process.stdout.on('data', function(data) {
+            socket.emit('console', data.toString());
+          });
+          minor_process.stderr.on('data', function(data) {
+            socket.emit('console', data.toString());
+          });
+        }
+        else {
+          run_corels(fileInfo.data, out_path, label_path, minor_path, socket, function() {
+            done_run();
+          });
+        }
       }
     }
   });
 });
 
-/*
-function corels() {
-  queue_copy = corels_queue.slice(0);
-
-  var idx_shift = 0;
-  queue_copy.forEach(function(e, e_idx) {
-    out_path = e.id + ".out";
-    label_path = e.id + ".label";
-    minor_path = "";
-
-    if(e.use_minor)
-      minor_path = e.id + ".minor";
-
-    var command = __dirname + "/../corels/src/corels";
-
-    var corels = spawn(command, args, { shell: true, env: { 'LD_LIBRARY_PATH': '/usr/local/lib:/usr/lib:/usr/local/lib64:/usr/lib64' }});
-    corels.stdout.on('data', function (data) {
-      res.write(data.toString());
-    });
-    corels.on('close', function () {
-      res.write("\n----------DONE----------");
-      res.end();
-      exec("rm -rf " + out_path + " " + label_path + " " + minor_path, {}, function (err, stdout, stderr) {
-        if (err) throw err;
-      });
-    });
-
-
-function mine() {
-  queue_copy = mine_queue.slice(0);
-
-  var idx_shift = 0;
-  queue_copy.forEach(function(e, e_idx) {
-    csv_path = dir_upload + e.id + ".csv";
-    out_path = dir_upload + e.id + ".out";
-    label_path = dir_upload + e.id + ".label";
-
-    if(complete_files.contains(e.id + ".csv")) {
-      min_support = e.min_support;
-      max_card = e.max_card;	
-
-      var command = __dirname + "/../utils/mine -c " + max_card + " -s " + min_support +
-                    " " + csv_path + " " + out_path + " " + label_path + " " + minor_path;
-
-      console.log(command);
-      
-      var i = complete_files.indexOf(e.id + ".csv");
-      if(i != -1) 
-        complete_files.splice(i, 1);
-
-      mine_queue = mine_queue.splice(e_idx - idx_shift, 1);
-      idx_shift += 1;
-
-      exec(command, function(err, stdout, stderr) {
-        if(err) { console.log(err); }
-         
-        exec("rm -f " + csv_path, function(err, stdout, stderr) {
-          if(err) { console.log(err); }
-        });
-
-        //run_corels(req, res, out_path, label_path, minor_path);
-      });
-    }
-  }
-});
-
-function run_corels(req, res, out_path, label_path, minor_path)
-{
-  // add parameters to array
-  var args = [];
-  var vopt = false;
-  var vstr = "";
-  var keys = Object.keys(req.body), len = keys.length, i = 0;
-  while (i < len) {
-    var arg = keys[i];
-    if (arg == "regularization") {
-      args.push("-r " + req.body[arg]);
-    } else if (arg == "max_nodes") {
-      args.push("-n " + req.body[arg]);
-    } else if (S("rule|label|samples|progress|log").contains(arg)) {
-      if (!vopt) {
-        args.push("-v");
-        vopt = true;
-      }
-      vstr += req.body[arg];
-      if (i < len - 1) vstr += ",";
-      else args.push(vstr);
-    } else if (arg != "submit") {
-      args.push(req.body[arg]);
-    }
-    i++;
-  }
-
-  if (!vopt) {
-    args.push("-v");
-    args.push("silent");
-  }
-  // get input file paths
-  args.push(out_path);
-  args.push(label_path);
-  if (minor_path) args.push(minor_path);
-
-  // run CORELS command
-  var command = __dirname + "/../corels/src/corels";
-
-  var corels = spawn(command, args, { shell: true, env: { 'LD_LIBRARY_PATH': '/usr/local/lib:/usr/lib:/usr/local/lib64:/usr/lib64' }});
-  corels.stdout.on('data', function (data) {
-    res.write(data.toString());
-  });
-  corels.on('close', function () {
-    res.write("\n----------DONE----------");
-    res.end();
-    exec("rm -rf " + out_path + " " + label_path + " " + minor_path, {}, function (err, stdout, stderr) {
-      if (err) throw err;
-    });
-  });
-}*/
-
-// listen on port 8080
-server.listen(8080, function () {
-  var host = server.address().address
-  var port = server.address().port
-});
+server.listen(8080);

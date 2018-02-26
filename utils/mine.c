@@ -6,24 +6,11 @@
 
 #include <gmp.h>
 
-typedef unsigned long long int us_t;
-
-us_t getus()
-{
-  struct timeval tv;
-
-  us_t mult = 1000000;
-  us_t s, us;
-  gettimeofday(&tv, NULL);
-  s = tv.tv_sec;
-  us = tv.tv_usec;
-
-  return (mult * s + us);
-}
+#include "timer.h"
 
 void usage(const char *name)
 {
-  printf("USAGE: %s [-s min_support] [-c max_cardinality] [-v] [-h] csv_file out_file label_file\n", name);
+  printf("USAGE: %s [-s min_support] [-c max_cardinality] [-v] [-h] [-m] csv_file out_file label_file [minor_file]\n", name);
 }
 
 int getnextperm(int n, int r, int *arr, int first)
@@ -112,10 +99,11 @@ int main(int argc, char **argv)
     };
   }
  
-  int ret = 0, nrules = 0, nrules_raw = 0, nfeatures = 0, nsamples = 0;
+  int ret = 0, nrules = 0, nfeatures = 0, nsamples_raw = 0, nsamples = 0;
+  size_t n = 0;
   int *rule_ids = NULL, *real_ids = NULL;
   char **features = NULL, **rules = NULL, **rule_names = NULL;
-  char *rule_str = NULL;
+  char *rule_str = NULL, *line = NULL;
   mpz_t *rules_vec = NULL;
   char *labels[2];
   labels[0] = NULL;
@@ -150,7 +138,7 @@ int main(int argc, char **argv)
     goto end;
   }
 
-  nsamples = 0;
+  nsamples_raw = 0;
   int c;
   
   // Get the upper bound on the number of features
@@ -170,28 +158,27 @@ int main(int argc, char **argv)
     c = getc(csv_fp);
 
     if(c == '\n')
-      nsamples++;
+      nsamples_raw++;
     else if(c == EOF) {
-      nsamples++;
+      nsamples_raw++;
       break;
     }
   }
 
-  labels[0] = malloc(2 * nsamples + 1);
-  labels[1] = malloc(2 * nsamples + 1);
+  labels[0] = malloc(2 * nsamples_raw + 1);
+  labels[1] = malloc(2 * nsamples_raw + 1);
 
   rewind(csv_fp);
 
-  char *line = NULL;
-  size_t n = 0;
-  int firstline = 1, sample = 0;
+  int firstline = 1;
   nfeatures = 0;
+  nsamples = 0;
   while(getline(&line, &n, csv_fp) != -1) {
     if(firstline) {
       char *tok = strtok(line, ",\n");
       while(tok != NULL) {
         if(tok[0] == '\n' || tok[0] == '\0')
-          continue;
+          break;
 
         nfeatures++;
         features[nfeatures - 1] = strdup(tok);
@@ -205,11 +192,11 @@ int main(int argc, char **argv)
       }
 
       // two for each feature - normal and not
-      nrules_raw = 2 * (nfeatures - 1);
-      rules = malloc(sizeof(char*) * nrules_raw);
+      nrules = 2 * (nfeatures - 1);
+      rules = malloc(sizeof(char*) * nrules);
 
-      for(int i = 0; i < nrules_raw; i++)
-        rules[i] = malloc(2 * nsamples + 1);
+      for(int i = 0; i < nrules; i++)
+        rules[i] = malloc(2 * nsamples_raw + 1);
 
       firstline = 0;
     }
@@ -220,56 +207,55 @@ int main(int argc, char **argv)
       int i = 0;
 
       while(tok != NULL) {
-        if(i == (nrules_raw / 2)) {
+        if(i == (nrules / 2)) {
           int num = atoi(tok);
 
-          labels[0][2 * sample] = !num + '0';
-          labels[0][2 * sample + 1] = ' ';
-          labels[1][2 * sample] = !!num + '0';
-          labels[1][2 * sample + 1] = ' ';
+          labels[0][2 * nsamples] = !num + '0';
+          labels[0][2 * nsamples + 1] = ' ';
+          labels[1][2 * nsamples] = !!num + '0';
+          labels[1][2 * nsamples + 1] = ' ';
           break;
         }
 
         int bit = atoi(tok);
-        rules[i][2 * sample] = !!bit + '0';
-        rules[i][2 * sample + 1] = ' ';
-        rules[nrules_raw / 2 + i][2 * sample] = !bit + '0';
-        rules[nrules_raw / 2 + i][2 * sample + 1] = ' ';
+        rules[i][2 * nsamples] = !!bit + '0';
+        rules[i][2 * nsamples + 1] = ' ';
+        rules[nrules / 2 + i][2 * nsamples] = !bit + '0';
+        rules[nrules / 2 + i][2 * nsamples + 1] = ' ';
         i++;
 
         tok = strtok(NULL, ",\n");
       }
 
-      if(i != (nrules_raw / 2))
-        nsamples--;
-      else
-        sample++;
+      if(i == (nrules / 2))
+        nsamples++;
     }
 
     free(line);
+    line = NULL;
     n = 0;
   }
 
   free(line);
+  line = NULL;
+  n = 0;
+
   fclose(csv_fp);
   csv_fp = NULL;
 
-  for(int i = 0; i < nrules_raw; i++)
+  for(int i = 0; i < nrules; i++)
     rules[i][2 * nsamples - 1] = '\0';
 
   labels[0][2 * nsamples - 1] = '\0';
   labels[1][2 * nsamples - 1] = '\0';
 
-  rules_vec = malloc(sizeof(mpz_t) * nrules_raw);
-  rule_names = malloc(sizeof(char*) * nrules_raw);
-
-  // Using nrules from now on, now we 
-  // start seeing which rules pass the min support test
+  rules_vec = malloc(sizeof(mpz_t) * nrules);
+  rule_names = malloc(sizeof(char*) * nrules);
 
   int min_thresh = min_support * (double)nsamples;
   int max_thresh = (1.0 - min_support) * (double)nsamples;
 
-  for(int i = 0; i < nrules_raw; i++) {
+  for(int i = 0; i < nrules; i++) {
     mpz_init2(rules_vec[i], nsamples);
     if(mpz_set_str(rules_vec[i], rules[i], 2) == -1) {
       for(int j = 0; j <= i; j++)
@@ -282,40 +268,27 @@ int main(int argc, char **argv)
 
     int ones = mpz_popcount(rules_vec[i]);
 
+    if(i < (nrules / 2))
+      rule_names[i] = strdup(features[i]);
+    else {
+      rule_names[i] = malloc(strlen(features[i - (nrules / 2)]) + 5);
+      strcpy(rule_names[i], features[i - (nrules / 2)]);
+      strcat(rule_names[i], "-not");
+    }
+
     if(ones < max_thresh && ones > min_thresh) {
-      memcpy(&rules_vec[nrules], &rules_vec[i], sizeof(mpz_t));
-
-      if(i < (nrules_raw / 2))
-        rule_names[nrules] = strdup(features[i]);
-      else {
-        rule_names[nrules] = malloc(strlen(features[i - (nrules_raw / 2)]) + 5);
-        strcpy(rule_names[nrules], features[i - (nrules_raw / 2)]);
-        strcat(rule_names[nrules], "-not");
-      }
-
-      fprintf(out_fp, "{%s} %s\n", rule_names[nrules], rules[i]);
+      fprintf(out_fp, "{%s} %s\n", rule_names[i], rules[i]);
       ntotal_rules++;
-      nrules++;
       
       if(verbose)
-        printf("%s generated with support %f\n", rule_names[nrules], (double)ones / (double)nsamples);
+        printf("%s generated with support %f\n", rule_names[i], (double)ones / (double)nsamples);
     }
-    else
-      mpz_clear(rules_vec[i]);
   }
 
   fprintf(label_fp, "{label=0} %s\n", labels[0]);
   fprintf(label_fp, "{label=1} %s\n", labels[1]);
 
-  free(labels[0]);
-  labels[0] = NULL;
-  free(labels[1]);
-  labels[1] = NULL;
-
-  if(max_card == 1)
-    goto end;
-
-  for(int i = 0; i < nrules_raw; i++)
+  for(int i = 0; i < nrules; i++)
     free(rules[i]);
   free(rules);
   rules = NULL;
@@ -332,23 +305,29 @@ int main(int argc, char **argv)
     int r = getnextperm(nrules, card, rule_ids, 1);
 
     while(r != -1) {
-      mpz_set(gen_rule, rules_vec[rule_ids[0]]);
-
       int valid = 1;
+      
+      mpz_set(gen_rule, rules_vec[rule_ids[0]]);
+      int ones = mpz_popcount(gen_rule);
 
-      int ones = nsamples;
-      for(int i = 0; i < card; i++) {
-        mpz_and(gen_rule, rules_vec[rule_ids[i]], gen_rule);
-        ones = mpz_popcount(gen_rule);
-        if(!(ones > min_thresh && ones < max_thresh)) {
-          valid = 0;
-          break;
+      if(ones > min_thresh) {
+        for(int i = 1; i < card; i++) {
+          mpz_and(gen_rule, rules_vec[rule_ids[i]], gen_rule);
+          ones = mpz_popcount(gen_rule);
+          if(ones <= min_thresh) {
+            valid = 0;
+            break;
+          }
         }
+
+        if(valid && ones >= max_thresh)
+          valid = 0;
       }
+      else
+        valid = 0;
 
       if(valid) {
         mpz_get_str(rule_str, 2, gen_rule);
-
         print_rule(out_fp, rule_ids, card, rule_names, rule_str, nsamples);
         ntotal_rules++;
 
@@ -387,7 +366,7 @@ end:
   }
 
   if(rules) {
-    for(int i = 0; i < nrules_raw; i++)
+    for(int i = 0; i < nrules; i++)
       if(rules[i])
         free(rules[i]);
 
