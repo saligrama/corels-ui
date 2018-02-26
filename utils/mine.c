@@ -13,8 +13,10 @@ void usage(const char *name)
   printf("USAGE: %s [-s min_support] [-c max_cardinality] [-v] [-h] [-m] csv_file out_file label_file [minor_file]\n", name);
 }
 
+// Cycles through all possible permutations of the numbers 1 through n-1 of length r
 int getnextperm(int n, int r, int *arr, int first)
 {
+  // Initialization case
   if(first) {
     for(int i = 0; i < r; i++)
       arr[i] = i;
@@ -34,6 +36,7 @@ int getnextperm(int n, int r, int *arr, int first)
   return -1;
 }
 
+// Simply print a generated rule to a file, the extensive use of fputc actually speeds it up by 2-3 times
 void print_rule(FILE *fp, int *rule_ids, int card, char **rule_names, char *rule_str, int nsamples)
 {
   fputc('{', fp);
@@ -101,7 +104,7 @@ int main(int argc, char **argv)
  
   int ret = 0, nrules = 0, nfeatures = 0, nsamples_raw = 0, nsamples = 0;
   size_t n = 0;
-  int *rule_ids = NULL, *real_ids = NULL;
+  int *rule_ids = NULL;
   char **features = NULL, **rules = NULL, **rule_names = NULL;
   char *rule_str = NULL, *line = NULL;
   mpz_t *rules_vec = NULL;
@@ -175,6 +178,8 @@ int main(int argc, char **argv)
   nsamples = 0;
   while(getline(&line, &n, csv_fp) != -1) {
     if(firstline) {
+      // Get the actual number of features
+
       char *tok = strtok(line, ",\n");
       while(tok != NULL) {
         if(tok[0] == '\n' || tok[0] == '\0')
@@ -195,18 +200,22 @@ int main(int argc, char **argv)
       nrules = 2 * (nfeatures - 1);
       rules = malloc(sizeof(char*) * nrules);
 
+      // the rules array stores the character string of bits that is printed to the .out file
       for(int i = 0; i < nrules; i++)
         rules[i] = malloc(2 * nsamples_raw + 1);
 
       firstline = 0;
     }
     else {
+      // Read a sample
+
       char *tok = strtok(line, ",\n");
 
       // counter for the number of features read for this sample
       int i = 0;
 
       while(tok != NULL) {
+        // Once the last bit (the classification bit) is encountered, set the label and break
         if(i == (nrules / 2)) {
           int num = atoi(tok);
 
@@ -255,34 +264,46 @@ int main(int argc, char **argv)
   int min_thresh = min_support * (double)nsamples;
   int max_thresh = (1.0 - min_support) * (double)nsamples;
 
-  for(int i = 0; i < nrules; i++) {
-    mpz_init2(rules_vec[i], nsamples);
-    if(mpz_set_str(rules_vec[i], rules[i], 2) == -1) {
-      for(int j = 0; j <= i; j++)
-        mpz_clear(rules_vec[j]);
+  // Trimmed number of rules: all rules except those that don't pass the minumum threshold
+  int nrules_mine = 0;
 
+  // File rules_vec, the mpz_t version of the rules array
+  for(int i = 0; i < nrules; i++) {
+    mpz_init2(rules_vec[nrules_mine], nsamples);
+    if(mpz_set_str(rules_vec[nrules_mine], rules[i], 2) == -1) {
+      mpz_clear(rules_vec[nrules_mine]);
       printf("Could not convert rules to vectors\n");
       ret = 2;
       goto end;
     }
 
-    int ones = mpz_popcount(rules_vec[i]);
+    int ones = mpz_popcount(rules_vec[nrules_mine]);
 
-    if(i < (nrules / 2))
-      rule_names[i] = strdup(features[i]);
-    else {
-      rule_names[i] = malloc(strlen(features[i - (nrules / 2)]) + 5);
-      strcpy(rule_names[i], features[i - (nrules / 2)]);
-      strcat(rule_names[i], "-not");
+    // If the rule satisfies the threshold requirements, add it to the out file.
+    // If it exceeds the maximum threshold, it is still kept for later rule mining
+    // If it less than the minimum threshold, don't add it
+    if(ones <= min_thresh) {
+      mpz_clear(rules_vec[nrules_mine]);
+      continue;
     }
-
-    if(ones < max_thresh && ones > min_thresh) {
-      fprintf(out_fp, "{%s} %s\n", rule_names[i], rules[i]);
+    
+    if(i < (nrules / 2))
+      rule_names[nrules_mine] = strdup(features[i]);
+    else {
+      rule_names[nrules_mine] = malloc(strlen(features[i - (nrules / 2)]) + 5);
+      strcpy(rule_names[nrules_mine], features[i - (nrules / 2)]);
+      strcat(rule_names[nrules_mine], "-not");
+    }
+    
+    if(ones < max_thresh) {
+      fprintf(out_fp, "{%s} %s\n", rule_names[nrules_mine], rules[i]);
       ntotal_rules++;
       
       if(verbose)
-        printf("%s generated with support %f\n", rule_names[i], (double)ones / (double)nsamples);
+        printf("%s generated with support %f\n", rule_names[nrules_mine], (double)ones / (double)nsamples);
     }
+
+    nrules_mine++;
   }
 
   fprintf(label_fp, "{label=0} %s\n", labels[0]);
@@ -299,10 +320,11 @@ int main(int argc, char **argv)
   rule_str = malloc(nsamples + 2);
 
   rule_ids = malloc(sizeof(int) * max_card);
-  real_ids = malloc(sizeof(int) * (nrules / 2));
 
+  // Generate higher-cardinality rules
   for(int card = 2; card <= max_card; card++) {
-    int r = getnextperm(nrules, card, rule_ids, 1);
+    // getnextperm works sort of like strtok
+    int r = getnextperm(nrules_mine, card, rule_ids, 1);
 
     while(r != -1) {
       int valid = 1;
@@ -310,6 +332,7 @@ int main(int argc, char **argv)
       mpz_set(gen_rule, rules_vec[rule_ids[0]]);
       int ones = mpz_popcount(gen_rule);
 
+      // Generate the new rule by successive and operations, and check if it has a valid support
       if(ones > min_thresh) {
         for(int i = 1; i < card; i++) {
           mpz_and(gen_rule, rules_vec[rule_ids[i]], gen_rule);
@@ -342,7 +365,7 @@ int main(int argc, char **argv)
         }
       }
 
-      r = getnextperm(nrules, card, rule_ids, 0);
+      r = getnextperm(nrules_mine, card, rule_ids, 0);
     }
   }
 
@@ -380,7 +403,7 @@ end:
     free(labels[1]);
 
   if(rules_vec) {
-    for(int i = 0; i < nrules; i++)
+    for(int i = 0; i < nrules_mine; i++)
       mpz_clear(rules_vec[i]);
   
     free(rules_vec);
@@ -392,11 +415,8 @@ end:
   if(rule_ids)
     free(rule_ids);
 
-  if(real_ids)
-    free(real_ids);
-
   if(rule_names) {
-    for(int i = 0; i < nrules; i++)
+    for(int i = 0; i < nrules_mine; i++)
       if(rule_names[i])
         free(rule_names[i]);
   

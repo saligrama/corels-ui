@@ -110,6 +110,7 @@ int main(int argc, char **argv)
   
   rewind(out_fp);
 
+  // Get the rules bitvectors
   while(getline(&line, &n, out_fp) != -1) {
     char *line_cpy = line;
     if(!strsep(&line_cpy, "}") || line_cpy[0] != ' ')
@@ -137,6 +138,7 @@ int main(int argc, char **argv)
   minority = malloc(2 * nsamples + 1);
   sample_indices = malloc(sizeof(int) * nsamples);
 
+  // Generate the sample bitvectors
   for(int s = 0; s < nsamples; s++) {
     for(int i = 0; i < nrules; i++)
       line_clean[i] = !!mpz_tstbit(rules_vec[i], nsamples - s - 1) + '0';
@@ -160,14 +162,17 @@ int main(int argc, char **argv)
   for(int i = 0; i < nsamples; i++)
     sample_indices[i] = i;
   
+  // Sort the samples by value (this groups those samples that are identically featured together)
   qsort(sample_indices, nsamples, sizeof(int), sample_comp);
 
+  // Loop through the sorted samples, finding identically-featured groups
   int begin_group = 0;
   for(int i = 1; i < (nsamples + 1); i++) {
     if(i == nsamples || mpz_cmp(sample_array[sample_indices[i]], sample_array[sample_indices[i-1]]) != 0) {
       int ones = 0;
       int zeroes = 0;
       char c, nc;
+      // Find the number of zero-labelled and one-labelled samples in this group
       for(int j = begin_group; j < i; j++) {
         int idx = sample_indices[j];
         if(mpz_tstbit(label0, nsamples - idx - 1))
@@ -176,6 +181,8 @@ int main(int argc, char **argv)
           ones++;
       }
 
+      // What should happen if zeroes = ones??
+      // Right now it just replicates bbcache/processing/minority.py
       if(zeroes < ones) {
         c = '1';
         nc = '0';
@@ -185,6 +192,7 @@ int main(int argc, char **argv)
         nc = '1';
       }
       
+      // Set all the samples in this group to either 0 or 1 in the minority file
       for(int j = begin_group; j < i; j++) {
         int idx = sample_indices[j];
         if(mpz_tstbit(label0, nsamples - idx - 1)) {
