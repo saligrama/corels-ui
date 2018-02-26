@@ -10,7 +10,7 @@
 
 void usage(const char *name)
 {
-  printf("USAGE: %s [-s min_support] [-c max_cardinality] [-v] [-h] [-m] csv_file out_file label_file [minor_file]\n", name);
+  printf("USAGE: %s [-s min_support] [-c max_cardinality] [-v] [-h] csv_file out_file label_file\n", name);
 }
 
 // Cycles through all possible permutations of the numbers 1 through n-1 of length r
