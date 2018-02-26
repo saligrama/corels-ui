@@ -4,9 +4,6 @@ var exec = require('child_process').exec;
 
 // external libraries
 var express = require('express');
-var multer = require('multer');
-var bodyParser = require('body-parser');
-var S = require('string');
 var randomstring = require("randomstring");
 var SocketIOFile = require('socket.io-file');
 

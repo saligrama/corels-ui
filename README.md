@@ -13,10 +13,16 @@ Compile the CORELS code.
     cd corels/src
     make
     cd ../..
+ 
+Compile the utilities
+
+    cd utils
+    make all
+    cd ..
 
 You must have NodeJS installed. Then, install required NodeJS libraries:
 
-    npm install express multer body-parser string
+    npm install express randomstring socket.io-file socket.io-file-client socket.io http
 
 # Usage
 
