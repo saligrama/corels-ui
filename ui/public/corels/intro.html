@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/css/main.css">
+
+<head>
+    <title>CORELS: Learning Certifiably Optimal RulE ListS</title>
+
+    <style>
+
+    h5 {
+        font-weight: 600;
+    }
+
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-sm navbar-light bg-light">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/getstarted.html">Get Started</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/corels/index.html">CORELS</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container" style="margin-top: 40px">
+        <div class="row">
+            <div class="offset-3 col-6 offset-sm-0 col-lg-2 col-sm-3 text-center" style="margin-bottom: 30px">
+                <a class="side-nav-title text-center" href="/corels/">CORELS</a>
+                <ul class="nav nav-pills flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/corels/intro.html">Introduction</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/packages.html">Install</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/examples.html">Examples</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/run.html">Run It!</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-12 col-sm-9 col-lg-10 border-left" style="margin-bottom:40px">
+                <div class="container">
+                    <h5>Overview</h5>
+                    <p>
+                        CORELS is a custom discrete optimization technique for building rule lists over a categorical feature space. Our algorithm provides the optimal solution, with a certificate of optimality. By leveraging algorithmic bounds, efficient data structures, and computational reuse, we achieve several orders of magnitude speedup in time and a massive reduction of memory consumption. Our approach produces optimal rule lists on practical problems in seconds. This framework is a novel alternative to CART and other decision tree methods.
+                    </p>
+                    <br>
+                    <p>
+                        If you're not sure what a rule list is, head over to our <a href="/getstarted.html">rule list introduction</a> before continuing.
+                    </p>
+                    <br>
+                    <h5>Input/Output</h5>
+                    <p>
+                        CORELS is trained on a dataset of n rules, where each rule captures some subset of m samples. These rules must be pre-mined - that is, CORELS is inputted not a list of samples with their associated features, but a list of rules, each represented by a bitvector of length m. The i'th bit of a rule's bitvector represents whether that rule captures the i'th sample (1) or if it doesn't (0). 
+                        All features are binary, as is the classification of all the rules.
+                        Since all the sample features as well as the rule list classifications must be binary, continuous values or multi-class features must be broken down into categories. For instance, if a particular data set contained samples of people, and one of its features was age, instead of having one continuous 'age' feature you would have to break it down into 
+                    </p>
+                    <br>
+                    <p>
+                        Once trained, CORELS outputs a rule list. If allowed to run unconstrained, CORELS will output the certifiably most accurate rule list that can be generated from the given set of rules over the given training set. However, finding the optimal rule list may be computationally infeasible with large datasets, so we provide an option to stop searching after a certain (large) number of rule lists have been tried out.
+                    </p>
+                    <br>
+                    <h5>Algorithm</h5>
+                    <p>
+                        CORELS is a branch-and-bound algorithm, and leverages several algorithmic bounds to prune a trie that represents the search space of all possible rule lists to be examined.
+                        <br><br>
+                        The search space of all possible rule lists is represented by a prefix tree, or trie. Assuming <code>n</code> rules, the root node of this trie has <code>n</code> children, one for each rule. Each of those children have <code>(n - 1)</code>
+                        <br><br>
+                        CORELS searches every possible rule list that can be created from a given set of rules, and assigns each list an optimality value (called its 'objective'). This value is simply the fraction of training samples that the rule list misclassifies, plus a factor that is proportional to the length of the rule list. A higher objective means the rule list is less desireable. By keeping track of the lowest objective found, it is possible to eliminate many rule lists without evaluating their accuracy, greatly speeding up the search for the optimal list. 
+                        
+                        The objective is calculated as follows:
+                        <pre><code>R(d, x, y) = misc(d, x, y) + c * length(d)</code></pre>
+                        Where:
+                        <ul>
+                            <li><code>d</code> is the rule list</li>
+                            <li><code>x</code> is the training data features</li>
+                            <li><code>y</code> is the training data classifications</li>
+                            <li><code>misc</code> is the fraction of misclassified samples</li>
+                            <li><code>c</code> is a user-defined constant (called the regularization constant)</li>
+                        </ul> 
+                        <br>
+                        For each rule list being evaluated, CORELS calculates a lower bound:
+                        <pre><code>b(p, x, y) = misc(p, x, y) + c * length(d)</code></pre>
+                        If this lower bound is greater than the lowest objective found so far, 
+                        <br>
+                        Further information about CORELS can be found in <a href="/corels/Larus-Stone_thesis.pdf">this</a> wonderful paper about it.
+                    </p>
+                    <br>
+                    <h5>Applications</h5>
+                    <p>
+                        CORELS generates highly accurate models on datasets with relatively few rules, but many training samples.
+                        We have demonstrated that it can find rule lists that are as accurate, if not more so, as more complex black-box models that utilize non-human-readable tools such as neural nets. For instance, when trained 
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="/js/jquery-3.3.1.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

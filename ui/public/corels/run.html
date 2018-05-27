@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/css/main.css">
+
+<head>
+    <title>CORELS: Learning Certifiably Optimal RulE ListS</title>
+    
+    <style>
+    .data-title {
+        text-align: center;
+    }
+    .data-format {
+        text-align: center;
+        margin-top: 6px;
+    }
+    .alert {
+        margin-top: 10px;
+    }
+    .progress {
+        display: none;
+        margin: 5px 0px;
+    }
+    .output_heading h3 {
+        display: inline-block;
+        padding: 8px;
+    }
+    .output_heading {
+        height: 54px;
+    }
+    #abort {
+        float: right;
+        margin-top: -5px;
+    }
+    #console {
+      width: 100%;
+      height: 300px;
+      background-color: black;
+      color: white;
+      padding: 10px;
+      border: 2px solid #666;
+      overflow-y: scroll;
+    }
+    .card-body {
+        padding: 30px;
+    }
+    .card {
+        margin: 5px;
+    }
+    .card-header {
+        font-size: 19px;
+    }
+    .card-footer {
+        text-align: center;
+    }
+    </style>
+
+    <script src="/socket.io.js"></script>
+    <script src="/socket.io-file-client.js"></script>
+    
+    <script>
+    function m_alert(e, mes) {
+      var html = 
+          "<div class='alert alert-danger' role='alert' style='margin-bottom: 0px;'>" +
+              "<button type='button' class='close' data-dismiss='alert'>" +
+                  "<span>&times;</span>" +
+              "</button>" +
+              mes +
+          "</div>";
+
+      e.innerHTML = html;
+    }
+
+    window.onload = function() {
+        var socket = io("http://localhost:8080");
+        var uploader = new SocketIOFileClient(socket);
+
+        var running = false;
+ 
+        var files = ["csv", "out", "label", "minor"];
+
+        uploader.on("stream", function(fileInfo) {
+            var percent = Math.round(100 * fileInfo.sent / fileInfo.size);
+            percent = percent.toString() + "%";
+
+            files.forEach(function(e) {
+                if(fileInfo.data.type == e)
+                    document.getElementById(e + "_progress").children[0].style.width = percent;
+            });
+        });
+
+        function reset() {
+            if(!running)
+                return;
+
+            files.forEach(function(e) {
+                document.getElementById(e + "_progress").style.display = "none";
+            });
+            running = false;
+
+            var curr = uploader.getUploadInfo()
+
+            for(var key in curr) {
+                uploader.abort(key);
+            }
+        
+            socket.emit("reset");
+        }
+
+        document.getElementById("abort").onclick = function(e) { e.preventDefault(); reset(); }
+
+        uploader.on("error", reset);
+
+        uploader.on("complete", function(fileInfo) {
+            files.forEach(function(e) {
+                if(fileInfo.data.type == e)
+                    document.getElementById(e + "_progress").style.display = "none";
+            });
+        });
+        
+        uploader.on("start", function(fileInfo) {
+            files.forEach(function(e) {
+                if(fileInfo.data.type == e) {
+                    document.getElementById(e + "_progress").style.display = "block";
+                    document.getElementById(e + "_progress").children[0].style.width = "0%";
+                }
+            });
+        });
+
+        socket.on("console", function(data) {
+            var cons = document.getElementById("console");
+            cons.children[0].innerHTML += data.replace(/\n/g, "<br \>");
+            cons.scrollBy(0, 1000000);
+        });
+
+        socket.on("done-run", function() {
+            running = false;
+        });
+
+        function getCorelsOptions() {
+            var data = {};
+
+            data.regularization = document.getElementById("regularization").value;
+            data.max_nodes = document.getElementById("max_nodes").value;
+            data.search_policy = document.getElementById("search_policy").value;
+            data.prefix_map = document.getElementById("prefix_map").value;
+            data.verbosity = "";
+
+            var checks = document.getElementById("verbosity-wrap").querySelectorAll("input[type=checkbox]");
+
+            checks.forEach(function(e) {
+                if(e.checked)
+                    data.verbosity += e.id + ",";
+            });
+
+            if(data.verbosity)
+                data.verbosity = data.verbosity.slice(0, -1);
+            else
+                data.verbosity = "silent";
+            
+            if(data.verbosity.includes("samples") && !data.verbosity.includes("rule") && !data.verbosity.includes("label")) {
+                m_alert(alert_e, "To print samples, either printing rules or printing labels must be included");
+                data = null;
+            }
+                
+
+            var reg = parseFloat(data.regularization);
+            var nodes = parseInt(data.max_nodes);
+               
+            var alert_e = document.getElementById("parameters_alert_wrap");
+
+            if(reg < 0.0) {
+                m_alert(alert_e, "Regularization constant must be greater than or equal to 0");
+                data = null;
+            }
+            else if(nodes <= 0) {
+                m_alert(alert_e, "Maximum number of nodes must be greater than 0");
+                data = null;
+            }
+
+            return data;
+        }
+
+        document.getElementById("csv_submit").onclick = function(e) {
+            e.preventDefault();
+
+            if(running)
+                return;
+
+            //socket.on("start-run-confirm", function() {
+                var data = getCorelsOptions();
+
+                if(data) {
+                    if(document.getElementById("make_minor").checked)
+                        data.make_minor = true;
+                    data.min_support = document.getElementById("min_support").value;
+                    data.max_card = document.getElementById("max_card").value;
+                    data.mine = 1;
+                    data.type = "csv";
+                    
+                    var support = parseFloat(data.min_support);
+                    var card = parseInt(data.max_card);
+
+                    var alert_e = document.getElementById("csv_alert_wrap");
+
+                    if(support < 0.0 || support > 0.5) {
+                        m_alert(alert_e, "Minimum support must be less than or equal to 0.5 and greater than or equal to 0");
+                        data = null;
+                    }
+                    else if(card < 1) {
+                        m_alert(alert_e, "Max cardinality must be greater than 0");
+                        data = null;
+                    }
+
+                    if(data) {
+                        var csv = document.getElementById("csv");
+
+                        if(!csv.value)
+                            m_alert(alert_e, "Please upload a csv file");
+                        else {
+                            socket.emit("start-run");
+                            running = true;
+                            uploader.upload(csv, { data: data });
+                        }
+                    }
+                }
+            //});
+        };
+                     
+        document.getElementById("corels_submit").onclick = function(e) {
+            e.preventDefault();
+
+            if(running)
+              return;
+
+            //socket.on("start-run-confirm", function() {
+                var data = getCorelsOptions();
+                
+                if(data) {
+                    var out = document.getElementById("out");
+                    var label = document.getElementById("label");
+                    var minor = document.getElementById("minor");
+            
+                    if(document.getElementById("generate_minor").checked)
+                      data.make_minor = true;
+
+                    if(out.value && label.value) {
+                        socket.emit("start-run");
+                        running = true;
+
+                        if(minor.value) {
+                            data.use_minor = true;
+                            uploader.upload(minor, { data: Object.assign({ type: "minor" }, data)});
+                        }
+
+                        uploader.upload(out, { data: Object.assign({ type: "out" }, data)});
+                        uploader.upload(label, { data: Object.assign({ type: "label" }, data)});
+                    }
+                    else
+                        m_alert(document.getElementById("corels_alert_wrap"), "Please upload a .out and a .label file");
+                }
+            //});
+        };
+    };
+    </script>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-sm navbar-light bg-light">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/getstarted.html">Get Started</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/corels/index.html">CORELS</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container" style="margin-top: 40px">
+        <div class="row">
+            <div class="offset-3 col-6 offset-sm-0 col-sm-3 col-lg-2 text-center" style="margin-bottom: 30px">
+                <a class="side-nav-title text-center" href="/corels/">CORELS</a>
+                <ul class="nav nav-pills flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/intro.html">Introduction</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/packages.html">Install</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/examples.html">Examples</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/corels/run.html">Run It!</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-12 col-sm-9 col-lg-10 border-left" style="margin-bottom:40px">
+                <h4 style="text-align: center">Please select options and upload data files.</h4>
+                <br>
+                <div id="corels_format" tabindex="-1" class="modal fade" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Corels data formatting tips</h4>
+                                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                            </div>
+                            <div class="modal-body">
+                                <p><b>General data format: </b></p>
+                                <ul>
+                                    <li>The input data files must be space-delimited text.</li>
+                                    <li>Each line contains <code>N+1</code> fields, where <code>N</code> is the number of observations, and ends with <code>\n</code> (including the last line).</li>
+                                    <li>In each line, the last <code>N</code> fields are <code>0</code>'s and <code>1</code>'s, and encode a bit vector; the first field has the format <code>{text-description}</code>, where the text between the brackets provides a description of the bit vector.</li>
+                                </ul>
+                                <p><b>Training data file (extension <code>".out"</code>):</b></p>
+                                <ul>
+                                    <li>Encode <code>M</code> antecedents as <code>M</code> space-delimited lines of text. Each line contains <code>N+1</code> fields.</li>
+                                    <li>The first field has the format <code>{antecedent-description}</code>, where the text between the brackets describes the antecedent, e.g., <code>{hair-color:brown}</code>, or <code>{age:20-25}</code>.</li>
+                                    <li>The remaining <code>N</code> fields indicate whether the antecedent is true or false for the <code>N</code> observations.</li>
+                                </ul>
+                                <p><b>Training labels (extension ".label"):</b></p>
+                                <ul>
+                                    <li>Encode labels as two space-delimited lines of text. The first line starts with a description of the negative class label, e.g., <code>{label=0}</code>; the remaining <code>N</code> fields indicate which of the <code>N</code> observations have this label.</li>
+                                    <li>The second line contains analogous (redundant) information for the positive class label.</li>
+                                </ul>
+                                <p><b>Minor file (extension ".minor"):</b> Bit vector to support use of the equivalent points bound (optional, see <i>Theorem 20 in Section 3.14</i> of our paper).</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="csv_format" tabindex="-1" class="modal fade" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">CSV data formatting tips</h4>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <p><b>General data format: </b></p>
+                                <ul>
+                                    <li>The input must contain comma-delimited text.</li>
+                                    <li>All data, including features and classification, must be binary (besides the first row, the only value fields may have are the characters '0' and '1').</li>
+                                    <li>The first row of data must contain the list of features, each one followed by a comma, and be terminated by the classification label name.</li>
+                                    <li>Each subsequenct row, with one row per sample, must contain a list of bits (of length the number of features plus 1 [the classification]), with each bit separated by a comma.</li>
+                                </ul>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="exp" class="modal fade" role="dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">About CORELS</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>
+                                CORELS is a custom discrete optimization technique for building rule lists over a categorical feature space. Our algorithm provides the optimal solution, with a certificate of optimality. By leveraging algorithmic bounds, efficient data structures, and computational reuse, we achieve several orders of magnitude speedup in time and a massive reduction of memory consumption. Our approach produces optimal rule lists on practical problems in seconds. This framework is a novel alternative to CART and other decision tree methods.
+                            </p>
+
+                            <p>
+                                This website is a web front end for the CORELS algorithm. Here you can select parameters for the algorithm to run under:
+                            </p>
+                                <ul>
+                                    <li>The regularization coefficient can be thought of as adding a penalty equivalent to misclassifying 1% of data when increasing a rule list's length by one association rule.</li>
+                                    <li>The search policy drop-down tells the algorithm how to order the candidate search nodes in the tree; different policies consider different nodes the "best" possible remaining node.</li>
+                                    <li>The symmetry-aware map supports symmetry-aware pruning; the prefix map is recommended to use for algorithm speedup.</li>
+                                    <li>You can adjust the max number of nodes to change the point at which the algorithm should stop if a certifiably optimal rule list hasn't been found yet. A lower value will result in faster execution.</li>
+                                </ul>
+                                 The various data files are described <a href="#" data-toggle="modal" data-target="#data_format" data-dismiss="modal">here</a>. An update to this website is coming soon with more parameters to select, as well as a better way to display algorithm output.
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <p style="text-align: left">Website created by Aditya Saligrama and Vassilios Kaxiras.</p>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="container">
+                    <form id="upload_form">
+                        <div class="row">
+                            <div class="col-lg-4 flex-first">
+                                <div class="card">
+                                    <div class="card-header">
+                                        Parameters
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="col-12">
+                                            <div class="row">
+                                                <label for="regularization">Regularization Coefficient</label>
+                                                <input type="number" step="0.001" min="0" max="1" id="regularization" name="regularization" class="form-control" value="0.01" required/>
+                                            </div>
+                                            <br>
+                                            <div class="row">
+                                                <label for="max_nodes">Max number of nodes</label>
+                                                <input type="number" min=10000 id="max_nodes" name="max_nodes" class="form-control" value=1000000 required/>
+                                            </div>
+                                            <br>
+                                            <div class="row">
+                                                <label for="search_policy">Search Policy</label>
+                                                <select id="search_policy" name="search_policy" class="form-control" required/>
+                                                    <option value="-c 1">Prioritize by curiosity</option>
+                                                    <option value="-c 2" selected="selected">Prioritize by lower bound</option>
+                                                    <option value="-c 3">Prioritize by objective</option>
+                                                    <option value="-c 4">Depth-first search</option>
+                                                    <option value="-b">Breadth-first search</option>
+                                                </select>
+                                            </div>
+                                            <br>
+                                            <div class="row">
+                                                <label for="prefix_map">Symmetry-aware map type</label>
+                                                <select id="prefix_map" name="prefix_map" class="form-control" />
+                                                    <option value="-p 0">No symmetry-aware map</option>
+                                                    <option value="-p 1" selected="selected">Permutation map</option>
+                                                    <option value="-p 2">Captured vector map</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-12" id="parameters_alert_wrap">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 flex-unordered">
+                                <div class="card">
+                                    <div class="card-header">
+                                        Corels data
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="col-12">
+                                            <div class="row">
+                                                <label for="out">Training data (extension ".out")</label>
+                                                <input type="file" id="out" name="out" class="form-control">
+                                            </div>
+                                            <div class="progress" id="out_progress">
+                                                <div class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                            <br>
+                                            <div class="row">
+                                                <label for="label">Training labels (extension ".label")</label>
+                                                <input type="file" id="label" name="label" class="form-control">
+                                            </div>
+                                            <div class="progress" id="label_progress">
+                                                <div class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                            <br>
+                                            <div class="row">
+                                                <label for="label">Equivalent Points file (optional, extension ".minor")</label>
+                                                <input type="file" id="minor" name="minor" class="form-control">
+                                            </div>
+                                            <div class="progress" id="minor_progress">
+                                                <div class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                            <br>
+                                            <div class="form-check row">
+                                                <input type="checkbox" id="generate_minor" name="generate_minor" class="form-check-input" value="">
+                                                <label class="form-check-label" for="generate_minor">Generate Equivalent Points file if not provided</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12" id="corels_alert_wrap">
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <button style="margin-bottom:5px" id="corels_submit" type="button" class="btn btn-primary">Submit</button>
+                                        <br>
+                                        <a class="card-link" href="#" data-toggle="modal" data-target="#corels_format">Show corels data formatting tips</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 flex-last">
+                                <div class="card">
+                                    <div class="card-header">
+                                        CSV Data
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="csv-group" class="col-12">
+                                            <div class="row">
+                                                <label for="csv">Sample data (extension ".csv")</label>
+                                                <input type="file" id="csv" name="csv" class="form-control">
+                                            </div>
+                                            <div class="progress" id="csv_progress">
+                                                <div class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                            <br>
+                                            <div class="form-check row">
+                                                <input type="checkbox" id="make_minor" name="make_minor" class="form-check-input" value="">
+                                                <label class="form-check-label" for="make_minor">Use Equivalent Points bound</label>
+                                            </div>
+                                            <br>
+                                            <div class="row">
+                                                <label for="min_support">Minimum support</label>
+                                                <input type="number" value="0.01" step="0.005" min="0" max="0.5" id="min_support" name="min_support" class="form-control">
+                                            </div>
+                                            <br>
+                                            <div class="row">
+                                                <label for="max_card">Maximum cardinality</label>
+                                                <input type="number" value="2" step="1" min="1" id="max_card" name="max_card" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="col-12" id="csv_alert_wrap">
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <button style="margin-bottom:5px" id="csv_submit" type="button" class="btn btn-primary">Submit</button>
+                                        <br>
+                                        <a class="card-link" href="#" data-toggle="modal" data-target="#csv_format">Show csv data formatting tips</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4 flex-first">
+                                <div class="card">
+                                    <div class="card-header">
+                                        Debug level
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="col-12" id="verbosity-wrap">
+                                            <div class="form-check row">
+                                                <input type="checkbox" id="progress" name="progress" value="progress" class="form-check-input" checked>
+                                                <label class="form-check-label" for="progress">Algorithm progress</label>
+                                            </div>
+                                            <div class="form-check row">
+                                                <input type="checkbox" id="log" name="log" value="log" class="form-check-input">
+                                                <label class="form-check-label" for="log">Log to files</label>
+                                            </div>
+                                            <div class="form-check row">
+                                                <input type="checkbox" id="rule" name="rule" value="rule" class="form-check-input">
+                                                <label class="form-check-label" for="rule">Print rules</label>
+                                            </div>
+                                            <div class="form-check row">
+                                                <input type="checkbox" id="label" name="label" value="label" class="form-check-input">
+                                                <label class="form-check-label" for="label">Print labels</label>
+                                            </div>
+                                            <div class="form-check row">
+                                                <input type="checkbox" id="samples" name="samples" value="samples" class="form-check-input">
+                                                <label class="form-check-label" for="samples">Print samples (Warning: LOTS OF OUTPUT)</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-8 flex-last">
+                                <div class="card">
+                                    <div class="card-header output_heading">
+                                        Output
+                                        <button class="btn btn-danger" id="abort">Abort</button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="col-12">
+                                            <div id="console">
+                                                <p></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="/js/jquery-3.3.1.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

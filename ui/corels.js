@@ -34,11 +34,6 @@ function nextid() {
   return s;
 }
 
-// display form
-app.get('/', function (req, res) {
-  return res.sendFile(__dirname + '/form.html');
-});
-
 app.get('/socket.io.js', (req, res, next) => {
   return res.sendFile(__dirname + '/node_modules/socket.io-client/dist/socket.io.js');
 });
