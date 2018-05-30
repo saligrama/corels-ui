@@ -13,6 +13,8 @@ var io = require('socket.io')(server);
 
 var id_len = 10;
 
+app.use(express.static(__dirname + '/node_modules'));
+
 // create upload directory if it doesn't exist
 var dir_upload_root = "/tmp/corels/files/";
 exec("mkdir -p " + dir_upload_root, {}, function (err, stdout, stderr) {
@@ -39,13 +41,13 @@ app.get('/', function (req, res) {
   return res.sendFile(__dirname + '/form.html');
 });
 
-app.get('/socket.io.js', (req, res, next) => {
-  return res.sendFile(__dirname + '/node_modules/socket.io-client/dist/socket.io.js');
-});
+//app.get('/socket.io.js', (req, res, next) => {
+//  return res.sendFile(__dirname + '/node_modules/socket.io-client/dist/socket.io.js');
+//});
   
-app.get('/socket.io-file-client.js', (req, res, next) => {
-  return res.sendFile(__dirname + '/node_modules/socket.io-file-client/socket.io-file-client.js');
-});
+//app.get('/socket.io-file-client.js', (req, res, next) => {
+//  return res.sendFile(__dirname + '/node_modules/socket.io-file-client/socket.io-file-client.js');
+//});
 
 function run_corels(params, out_path, label_path, minor_path, socket, end) {
   var args = [];
