@@ -21,7 +21,7 @@ exec("mkdir -p " + dir_upload_root, {}, function (err, stdout, stderr) {
  if (err) throw err;
 });
 
-app.use(express.static('public'));
+app.use(express.static(__dirname + 'public'));
 
 var used_ids = [];
 
@@ -51,7 +51,7 @@ app.get('/', function (req, res) {
 
 function run_corels(params, out_path, label_path, minor_path, socket, end) {
   var args = [];
-  var command = __dirname + "/../corels/src/corels";
+  var command = __dirname + "/../bbcache/src/corels";
   
   args.push("-r " + params.regularization);
   args.push("-n " + params.max_nodes);
