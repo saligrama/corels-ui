@@ -55,8 +55,8 @@
     }
     </style>
 
-    <script src="/socket.io.js"></script>
-    <script src="/socket.io-file-client.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/socket.io-file-client/socket.io-file-client.js"></script>
     
     <script>
     function m_alert(e, mes) {
@@ -72,7 +72,7 @@
     }
 
     window.onload = function() {
-        var socket = io("http://localhost:8080");
+        var socket = io.connect("http://localhost:8080");
         var uploader = new SocketIOFileClient(socket);
 
         var running = false;

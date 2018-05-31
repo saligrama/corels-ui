@@ -8,8 +8,8 @@ var randomstring = require("randomstring");
 var SocketIOFile = require('socket.io-file');
 
 var app = express();
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
+var server = require('http').createServer(app);
+var io = require('socket.io').listen(server);
 
 var id_len = 10;
 
@@ -20,6 +20,7 @@ exec("mkdir -p " + dir_upload_root, {}, function (err, stdout, stderr) {
 });
 
 app.use(express.static('public'));
+app.use(express.static('node_modules'));
 
 var used_ids = [];
 
@@ -34,13 +35,13 @@ function nextid() {
   return s;
 }
 
-app.get('/socket.io.js', (req, res, next) => {
+/*app.get('/socket.io.js', (req, res, next) => {
   return res.sendFile(__dirname + '/node_modules/socket.io-client/dist/socket.io.js');
 });
   
 app.get('/socket.io-file-client.js', (req, res, next) => {
   return res.sendFile(__dirname + '/node_modules/socket.io-file-client/socket.io-file-client.js');
-});
+});*/
 
 function run_corels(params, out_path, label_path, minor_path, socket, end) {
   var args = [];
