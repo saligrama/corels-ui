@@ -74,16 +74,16 @@
                     </p>
                     <br>
                     <p>
-                        Once trained, CORELS outputs a rule list. If allowed to run unconstrained, CORELS will output the certifiably most accurate rule list that can be generated from the given set of rules over the given training set. However, finding the optimal rule list may be computationally infeasible with large datasets, so we provide an option to stop searching after a certain (large) number of rule lists have been tried out.
+                        Once trained, CORELS outputs a rule list. If allowed to run unconstrained, CORELS will output the certifiably most accurate rule list that can be generated from the given set of rules over the given training set. However, finding the optimal rule list may be computationally infeasible with large datasets, so we provide an option to stop searching after a certain user-specified number of nodes of the search trie have been evaluated. For suboptimal rule lists, an option is also provided to calculate the upper bound on the remaining search space size.
                     </p>
                     <br>
                     <h5>Algorithm</h5>
                     <p>
                         CORELS is a branch-and-bound algorithm, and leverages several algorithmic bounds to prune a trie that represents the search space of all possible rule lists to be examined.
                         <br><br>
-                        The search space of all possible rule lists is represented by a prefix tree, or trie. Assuming <code>n</code> rules, the root node of this trie has <code>n</code> children, one for each rule. Each of those children have <code>(n - 1)</code>
+                        The search space of all possible rule lists is represented by a prefix tree, or trie. Assuming <code>n</code> rules, the root node of this trie has <code>n</code> children, one for each rule. Each of those children have <code>(n - 1)</code> children, and so on, forming a trie with n levels (not counting the root node). Each node in this trie actually represents a rule list <i>prefix</i>, and the bounds we calculate to remove nodes operate on these prefixes.
                         <br><br>
-                        CORELS searches every possible rule list that can be created from a given set of rules, and assigns each list an optimality value (called its 'objective'). This value is simply the fraction of training samples that the rule list misclassifies, plus a factor that is proportional to the length of the rule list. A higher objective means the rule list is less desireable. By keeping track of the lowest objective found, it is possible to eliminate many rule lists without evaluating their accuracy, greatly speeding up the search for the optimal list. 
+                        CORELS searches every possible rule list that can be created from a given set of rules, and assigns each list an optimality value called its objective. This value is simply the fraction of training samples that the rule list misclassifies, plus a factor that is proportional to the length of the rule list. A higher objective means the rule list is less desireable. By keeping track of the lowest objective found, it is possible to eliminate many rule lists without evaluating them at all, greatly speeding up the search. 
                         
                         The objective is calculated as follows:
                         <pre><code>R(d, x, y) = misc(d, x, y) + c * length(d)</code></pre>
@@ -93,21 +93,53 @@
                             <li><code>x</code> is the training data features</li>
                             <li><code>y</code> is the training data classifications</li>
                             <li><code>misc</code> is the fraction of misclassified samples</li>
-                            <li><code>c</code> is a user-defined constant (called the regularization constant)</li>
-                        </ul> 
-                        <br>
-                        For each rule list being evaluated, CORELS calculates a lower bound:
+                            <li><code>c</code> is a user-defined constant (called the regularization constant). A larger value of this penalizes larger rule lists - it can be thought of as an accuracy penalty for each added rule to the list (if it is set to 0.01, for instance, every added rule would incur a penalty equal to misclassifying 1% of the samples)</li>
+                        </ul>
+                        For each prefix being evaluated in the trie, CORELS calculates a lower bound:
                         <pre><code>b(p, x, y) = misc(p, x, y) + c * length(d)</code></pre>
-                        If this lower bound is greater than the lowest objective found so far, 
+                        If this lower bound is greater than the lowest objective found so far, then this prefix along with every node that is a child of it can be removed from the tree, since any rule list beginning with that prefix must necessarily have an objective that is greater than the best objective found so far.
                         <br>
-                        Further information about CORELS can be found in <a href="/corels/Larus-Stone_thesis.pdf">this</a> wonderful paper about it.
+                        <br>
+                        If the lower bound of a prefix is below the lowest objective, the node in the trie that represents that prefix is another one of CORELS' data structures: the priority queue. This queue is what determines the order in which rule lists are evaluated - the queue orders all the nodes within it using one of a variety of different metrics, chosen by the user.
+                        <br>
+                        <br>
+                        As of right now, the following options are avaiable:
+                        <br>
+                        <ul>
+                            <li><b>Breadth-First Search (BFS)</b></li>
+                            <li><b>Depth-First Search (DFS)</b></li>
+                            <li><b>Priority of objective:</b> The nodes with the lowest objective are evaluated first</li>
+                            <li><b>Priority of lower bound:</b> The nodes with the lowest lower bound are evaluated first</li>
+                            <li><b>Custom curiosity metric:</b> This orders nodes based on their lower bound as well as the number of samples they capture, prioritizing prefixes that capture few samples as well as those that are more accurate</li>
+                        </ul>
+                        <br>
+                        The curiosity metric is still being tweaked - further improvements on it might be added in the future.
+                        <br>
+                        Depending on the particular dataset, any of the above ordering metrics could be best.
+                        <br>
+                        <br>
+                        CORELS also uses a symmetry-aware map to eliminate prefixes that are permutations of each other from the search space. This map provides an important new tool for pruning the trie, since we can implement a tighter bound than only the objective. Specifically, if the lower bound of a particular prefix is greater than the lower bound of anothe prefix that is simply a permutation of the first prefix, then we can throw it out. This is because two different permutations of the same group of rules will capture the same set of samples, which means adding rules to the permutation with the higher lower bound would never yield a rule list with an objective lower than that of the best rule list starting with the permutation with the better lower bound. 
+                        <br>
+                        <br>
+                        This permutation map is implemented in two ways - either using the canonical order of rules in a prefix as the map keys (a prefix permutation map), or using the array of captured samples as the keys (a captured vector map). The latter type could result in theoretically better results, as prefixes that are not permutations of each other but capture the same set of samples would be grouped together, but it requires far more memory than the former.
+                        <br>
+                        <br>
+                        Finally, CORELS leverages two more bounds:
+                        <ul>
+                            <li>A lower bound on antecedent support, where rule list prefixes that do not capture less than the regularization constant times the number of samples are thrown out</li>
+                            <li>A lookahead bound, which adds the regularization constant to the lower bound of a rule list prefix to provide a tighter bound</li>
+                        </ul>
+                        The above two bounds can be disabled, but in almost all cases they help speed up the algorithm.
+                        <br>
+                        <br>
+                        A more in depth discussion of the above and further information about CORELS can be found in <a href="/corels/Larus-Stone_thesis.pdf">this</a> wonderful paper about the algorithm.
                     </p>
                     <br>
-                    <h5>Applications</h5>
+      <!--              <h5>Applications</h5>
                     <p>
                         CORELS generates highly accurate models on datasets with relatively few rules, but many training samples.
-                        We have demonstrated that it can find rule lists that are as accurate, if not more so, as more complex black-box models that utilize non-human-readable tools such as neural nets. For instance, when trained 
-                    </p>
+                        We have demonstrated that it can find rule lists that are as accurate, if not more so, as more complex black-box models that utilize non-human-readable tools such as neural nets. For instance, when trained
+                    </p>-->
                 </div>
             </div>
         </div>
