@@ -2,14 +2,22 @@
 var spawn = require('child_process').spawn;
 var exec = require('child_process').exec;
 
+var fs = require('fs');
+
 // external libraries
 var express = require('express');
 var randomstring = require("randomstring");
 var SocketIOFile = require('socket.io-file');
 
 var app = express();
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
+
+var options = {
+	key: fs.readFileSync('../../corels.eecs.harvard.edu.key'),
+	cert: fs.readFileSync('../../corels.eecs.havard.edu.cert')
+};
+
+var server = require('https').createServer(options, app);
+var io = require('socket.io').listen(server);
 
 var id_len = 10;
 
