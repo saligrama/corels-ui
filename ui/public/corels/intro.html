@@ -68,7 +68,7 @@
                     <br>
                     <h5>Input/Output</h5>
                     <p>
-                        CORELS is trained on a dataset of n rules, where each rule captures some subset of m samples. These rules must be pre-mined - that is, CORELS is inputted not a list of samples with their associated features, but a list of rules, each represented by a bitvector of length m. The i'th bit of a rule's bitvector represents whether that rule captures the i'th sample (1) or if it doesn't (0). 
+                        CORELS is a supervised learning algorithm, trained on a dataset of n rules, where each rule captures some subset of m samples. These rules must be pre-mined - that is, CORELS is inputted not a list of samples with their associated features, but a list of rules, each represented by a bitvector of length m. The i'th bit of a rule's bitvector represents whether that rule captures the i'th sample (1) or if it doesn't (0). 
                         All features are binary, as is the classification of all the rules.
                         Since all the sample features as well as the rule list classifications must be binary, continuous values or multi-class features must be broken down into categories. For instance, if a particular data set contained samples of people, and one of its features was age, instead of having one continuous 'age' feature you would have to break it down into 
                     </p>
@@ -83,9 +83,9 @@
                         <br><br>
                         The search space of all possible rule lists is represented by a prefix tree, or trie. Assuming <code>n</code> rules, the root node of this trie has <code>n</code> children, one for each rule. Each of those children have <code>(n - 1)</code> children, and so on, forming a trie with n levels (not counting the root node). Each node in this trie actually represents a rule list <i>prefix</i>, and the bounds we calculate to remove nodes operate on these prefixes.
                         <br><br>
-                        CORELS searches every possible rule list that can be created from a given set of rules, and assigns each list an optimality value called its objective. This value is simply the fraction of training samples that the rule list misclassifies, plus a factor that is proportional to the length of the rule list. A higher objective means the rule list is less desireable. By keeping track of the lowest objective found, it is possible to eliminate many rule lists without evaluating them at all, greatly speeding up the search. 
+                        As with other supervised learning algorithms, CORELS defines an objective function for possible models (rule lists), and then seeks to minimize it. The objective of a rule list is simply the fraction of training samples that the rule list misclassifies, plus a factor that is proportional to the length of the rule list. By keeping track of the lowest objective found, it is possible to eliminate many rule lists without evaluating them at all, greatly speeding up the search. 
                         
-                        The objective is calculated as follows:
+                        The objective function is defined as follows:
                         <pre><code>R(d, x, y) = misc(d, x, y) + c * length(d)</code></pre>
                         Where:
                         <ul>
