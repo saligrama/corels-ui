@@ -6,3 +6,4 @@ utils/minority
 utils/test
 utils/test_py
 logs/
+.vagrant/
