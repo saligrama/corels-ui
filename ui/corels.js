@@ -11,12 +11,12 @@ var SocketIOFile = require('socket.io-file');
 
 var app = express();
 
-var options = {
+/*var options = {
 	key: fs.readFileSync('../../corels.eecs.harvard.edu.key'),
-	cert: fs.readFileSync('../../corels.eecs.havard.edu.cert')
-};
+	cert: fs.readFileSync('../../corels.eecs.harvard.edu.cert')
+};*/
 
-var server = require('https').createServer(options, app);
+var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 
 var id_len = 10;
@@ -29,7 +29,7 @@ exec("mkdir -p " + dir_upload_root, {}, function (err, stdout, stderr) {
  if (err) throw err;
 });
 
-app.use(express.static(__dirname + 'public'));
+app.use(express.static(__dirname + '/public'));
 
 var used_ids = [];
 
@@ -292,3 +292,4 @@ io.on('connection', function(socket) {
 });
 
 server.listen(8080);
+console.log("Listening");
