@@ -19,8 +19,8 @@ exec("mkdir -p " + dir_upload_root, {}, function (err, stdout, stderr) {
  if (err) throw err;
 });
 
-app.use(express.static('public'));
-app.use(express.static('node_modules'));
+app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/node_modules'));
 
 var used_ids = [];
 
@@ -52,16 +52,16 @@ function run_corels(params, out_path, label_path, minor_path, socket, end) {
   args.push("-v " + params.verbosity);
   args.push(params.search_policy);
   args.push(params.prefix_map);
-  args.push(out_path);
-  args.push(label_path);
+  args.push("\"" + out_path + "\"");
+  args.push("\"" + label_path + "\"");
   if(minor_path)
-    args.push(minor_path);
+    args.push("\"" + minor_path + "\"");
 
   socket.emit('console', '\nRunning corels\n');
   var corels = spawn(command, args, { shell: true });
 
   corels.on('close', function() {
-    exec("rm -rf " + out_path + " " + label_path + " " + minor_path, {}, function(err, stdout, stderr) {
+    exec("rm -rf \"" + out_path + "\" \"" + label_path + "\" \"" + minor_path + "\"", {}, function(err, stdout, stderr) {
       if(err) console.log(err);
     });
 
@@ -124,17 +124,17 @@ io.on('connection', function(socket) {
     args.push("-v " + params.verbosity);
     args.push(params.search_policy);
     args.push(params.prefix_map);
-    args.push(out_path);
-    args.push(label_path);
+    args.push("\"" + out_path + "\"");
+    args.push("\"" + label_path + "\"");
     if(minor_path)
-      args.push(minor_path);
+      args.push("\"" + minor_path + "\"");
 
     socket.emit('console', '\nRunning corels\n');
     corels_process = spawn(command, args, { shell: true });
 
     corels_process.on('close', function() {
       corels_process = null;
-      exec("rm -rf " + out_path + " " + label_path + " " + minor_path, {}, function(err, stdout, stderr) {
+      exec("rm -rf \"" + out_path + "\" \"" + label_path + "\" \"" + minor_path + "\"", {}, function(err, stdout, stderr) {
         if(err) console.log(err);
       });
 
@@ -175,9 +175,9 @@ io.on('connection', function(socket) {
       var args = [];
       args.push("-c " + fileInfo.data.max_card);
       args.push("-s " + fileInfo.data.min_support);
-      args.push(csv_path);
-      args.push(out_path);
-      args.push(label_path);
+      args.push("\"" + csv_path + "\"");
+      args.push("\"" + out_path + "\"");
+      args.push("\"" + label_path + "\"");
       var command = __dirname + "/../utils/mine";
 
       socket.emit('console', '\nRunning miner\n');
@@ -187,17 +187,17 @@ io.on('connection', function(socket) {
 
       mine_process.on('close', function() {
         mine_process = null;
-        exec("rm -f " + csv_path, {}, function(err, stdout, stderr) {
+        exec("rm -f \"" + csv_path + "\"", {}, function(err, stdout, stderr) {
           if(err) console.log(err);
         });
 
         if(fdata.make_minor) {
           var minor_args = [];
-          minor_args.push(out_path);
-          minor_args.push(label_path);
+          minor_args.push("\"" + out_path + "\"");
+          minor_args.push("\"" + label_path + "\"");
 
           minor_path = dir_upload + "/minor_file.minor";
-          minor_args.push(minor_path);
+          minor_args.push("\"" + minor_path + "\"");
 
           var minor_command = __dirname + "/../utils/minority";
 
@@ -242,11 +242,11 @@ io.on('connection', function(socket) {
       if(out_path && label_path && (!fileInfo.data.use_minor || minor_path)) {
         if(!fileInfo.data.use_minor && fileInfo.data.make_minor) {
           var minor_args = [];
-          minor_args.push(out_path);
-          minor_args.push(label_path);
+          minor_args.push("\"" + out_path + "\"");
+          minor_args.push("\"" + label_path + "\"");
 
           minor_path = dir_upload + "/minor_file.minor";
-          minor_args.push(minor_path);
+          minor_args.push("\"" + minor_path + "\"");
 
           var minor_command = __dirname + "/../utils/minority";
 
