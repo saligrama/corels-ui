@@ -90,7 +90,7 @@
     }
 
     window.onload = function() {
-        var socket = io.connect("http://localhost:8080/");
+        var socket = io.connect("https://corels.eecs.harvard.edu/");
         var uploader = new SocketIOFileClient(socket);
 
         var running = false;
