@@ -15,8 +15,6 @@ var io = require('socket.io').listen(server);
 
 var id_len = 10;
 
-app.use(express.static(__dirname + '/node_modules'));
-
 // create upload directory if it doesn't exist
 var dir_upload_root = "/tmp/corels/files/";
 exec("mkdir -p " + dir_upload_root, {}, function (err, stdout, stderr) {
