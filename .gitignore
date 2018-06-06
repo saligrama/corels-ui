@@ -6,4 +6,6 @@ utils/minority
 utils/test
 utils/test_py
 logs/
+Vagrantfile
 .vagrant/
+package-lock.json
