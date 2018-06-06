@@ -1,0 +1,45 @@
+.side-nav-title {
+    font-size: 20px;
+    color: black;
+}
+
+.side-nav-title:hover {
+    text-decoration: underline;
+    color: black;
+}
+
+pre {
+    padding: 15px;
+    background-color: #f8f8f8;
+}
+
+code {
+    font-size: 87.5%;
+    color: #212529;
+    background-color: #f8f8f8;
+    padding: 7px;
+}
+
+pre code {
+    padding: 0px;
+}
+
+span.darkblue {
+    color: #0e84b5;
+}
+
+span.blue {
+    color: #4070a0;
+}
+
+span.bold {
+    font-weight: 600;
+}
+
+span.green {
+    color: #007020;
+}
+
+body {
+    overflow: scroll;
+}

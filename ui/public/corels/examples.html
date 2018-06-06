@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/css/main.css">
+
+<head>
+    <title>CORELS: Learning Certifiably Optimal RulE ListS</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-sm navbar-light bg-light">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/whatarerulelists.html">What Are Rule Lists?</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/corels/index.html">CORELS</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container" style="margin-top: 40px">
+        <div class="row">
+            <div class="col-6 col-lg-2 offset-3 offset-sm-0 col-sm-3 text-center" style="margin-bottom: 30px">
+                <ul class="nav nav-pills flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/">CORELS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/run.html">Run it Online!</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/install.html">Install</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/corels/examples.html">Examples</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-12 col-sm-9 border-left" style="margin-bottom:40px">
+                <div class="container">
+                    <h2>Command Line Interface (CLI)</h2>
+                    <br>
+                    <p>
+                        To see CORELS in action, run the following from the <code>src/</code> directory of the corels repo after compiling corels:
+                        <br>
+                        <pre><code>./corels -r 0.015 -c 2 -p 1 ../data/compas_train.out ../data/compas_train.label ../data/compas_train.minor</code></pre>
+                        <br>
+                        Further information on the parameters of the CLI can be found <a href="https://github.com/nlarusstone/corels/blob/master/README.md">here</a>
+                    </p>
+                    <br>
+                    <h2>Python</h2>
+                    <p>
+                        <pre><code><span class="green bold">import</span> <span class="darkblue bold">pycorels</span>
+pycorels.run(<span class="blue">"../data/compas_train.out"</span>, <span class="blue">"../data/compas_train.label"</span>, <span class="blue">"../data/compas_train.minor"</span>, c=0.015, curiosity_policy=2, map_type=1)</code></pre>
+                        <br>
+                        You can also load the data into numpy arrays first, if you want to programmatically manipulate them first:
+                        <br>
+                        <br>
+                        <pre><code><span class="green bold">import</span> <span class="darkblue bold">pycorels</span>
+
+out = pycorels.tolist(<span class="blue">"../data/compas_train.out"</span>)
+label = pycorels.tolist(<span class="blue">"../data/compas_train.label"</span>)
+minor = pycorels.tolist(<span class="blue">"../data/compas_train.minor"</span>)
+                
+pycorels.run(out, label, minor, c=0.015, curiosity_policy=2, map_type=1)</code></pre> 
+                        <br>
+                        Further information on the parameters of the python interface can be found <a href="#">here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="/js/jquery-3.3.1.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

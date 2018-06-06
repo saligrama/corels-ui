@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/css/main.css">
+
+<head>
+    <title>CORELS: Learning Certifiably Optimal RulE ListS</title>
+
+    <style>
+
+    h5 {
+        font-weight: 600;
+    }
+
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-sm navbar-light bg-light">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/whatarerulelists.html">What Are Rule Lists?</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/corels/index.html">CORELS</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container" style="margin-top: 40px">
+        <div class="row">
+            <div class="offset-3 col-6 offset-sm-0 col-lg-2 col-sm-3 text-center" style="margin-bottom: 30px">
+                <ul class="nav nav-pills flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/corels/">CORELS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/run.html">Run It Online!</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/install.html">Install</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/examples.html">Examples</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-12 col-sm-9 col-lg-10 border-left" style="margin-bottom:40px">
+                <div class="container">
+                    <h5>Overview</h5>
+                    <p>
+                        CORELS (Certifiable Optimal RulE ListS) is a custom discrete optimization technique for building rule lists over a categorical feature space. Our algorithm provides the optimal solution, with a certificate of optimality. By leveraging algorithmic bounds, efficient data structures, and computational reuse, we achieve several orders of magnitude speedup in time and a massive reduction of memory consumption. Our approach produces optimal rule lists on practical problems in seconds. This framework is a novel alternative to CART and other decision tree methods.
+                    </p>
+                    <br>
+                    <p>
+                        If you're not sure what a rule list is, head over to our <a href="/whatarerulelists.html">rule list introduction</a> before continuing.
+                    </p>
+                    <br>
+                    <h5>Input/Output</h5>
+                    <p>
+                        CORELS is a supervised learning algorithm, trained on a dataset of n rule antecedents, where each antecedent captures some subset of m samples. These antecedents must be pre-mined - that is, CORELS is inputted not a list of samples with their associated features, but a list of rule antecedents, each represented by a bitvector of length m. The i'th bit of a rule's bitvector represents whether that antecedent captures the i'th sample (1) or if it doesn't (0). 
+                        All features are binary, as is the classification of all the rules.
+                        Since all the sample features as well as the rule list classifications must be binary, continuous values or multi-class features must be broken down into categories. For instance, if a particular data set contained samples of people, and one of its features was age, instead of having one continuous 'age' feature you would have to break it down into 
+                    </p>
+                    <br>
+                    <p>
+                        Once trained, CORELS outputs a rule list. If allowed to run unconstrained, CORELS will output the certifiably most accurate rule list that can be generated from the given set of rule antecedents over the given training set. However, finding the optimal rule list may be computationally infeasible with large datasets, so we provide an option to stop searching after a certain user-specified number of nodes of the search trie have been evaluated. For suboptimal rule lists, an option is also provided to calculate the upper bound on the remaining search space size.
+                    </p>
+                    <br>
+                    <h5>Algorithm</h5>
+                    <p>
+                        CORELS is a branch-and-bound algorithm, and leverages several algorithmic bounds to prune a trie that represents the search space of all possible rule lists to be examined.
+                        <br><br>
+                        The search space of all possible rule lists is represented by a prefix tree, or trie. Assuming <code>n</code> antecedents, the root node of this trie has <code>n</code> children, one for each antecedent. Each of those children have <code>(n - 1)</code> children, and so on, forming a trie with n levels (not counting the root node). Each node in this trie represents a rule list <i>prefix</i> (with each node's classification being 0 or 1, depending only on which gives the most accurate prediction over the training data set), and the bounds we calculate to remove nodes operate on these prefixes.
+                        <br><br>
+                        As with other supervised learning algorithms, CORELS defines an objective function for possible models (rule lists), and then seeks to minimize it. The objective of a rule list is simply the fraction of training samples that the rule list misclassifies, plus a factor that is proportional to the length of the rule list. By keeping track of the lowest objective found, it is possible to eliminate many rule lists without evaluating them at all, greatly speeding up the search. 
+                        
+                        The objective function is defined as follows:
+                        <pre><code>R(d, x, y) = misc(d, x, y) + c * length(d)</code></pre>
+                        Where:
+                        <ul>
+                            <li><code>d</code> is the rule list</li>
+                            <li><code>x</code> is the training data features</li>
+                            <li><code>y</code> is the training data classifications</li>
+                            <li><code>misc</code> is the fraction of misclassified samples</li>
+                            <li><code>c</code> is a user-defined constant (called the regularization constant). A larger value of this penalizes larger rule lists - it can be thought of as an accuracy penalty for each added rule to the list (if it is set to 0.01, for instance, every added rule would incur a penalty equal to misclassifying 1% of the samples)</li>
+                        </ul>
+                        For each prefix being evaluated in the trie, CORELS calculates a lower bound:
+                        <pre><code>b(p, x, y) = misc(p, x, y) + c * length(d)</code></pre>
+                        If this lower bound is greater than the lowest objective found so far, then this prefix along with every node that is a child of it can be removed from the tree, since any rule list beginning with that prefix must necessarily have an objective that is greater than the best objective found so far.
+                        <br>
+                        <br>
+                        If the lower bound of a prefix is below the lowest objective, the node in the trie that represents that prefix is another one of CORELS' data structures: the priority queue. This queue is what determines the order in which rule lists are evaluated - the queue orders all the nodes within it using one of a variety of different metrics, chosen by the user.
+                        <br>
+                        <br>
+                        As of right now, the following options are avaiable:
+                        <br>
+                        <ul>
+                            <li><b>Breadth-First Search (BFS)</b></li>
+                            <li><b>Depth-First Search (DFS)</b></li>
+                            <li><b>Priority of objective:</b> The nodes with the lowest objectives are evaluated first</li>
+                            <li><b>Priority of lower bound:</b> The nodes with the lowest lower bounds are evaluated first</li>
+                            <li><b>Custom curiosity metric:</b> This orders nodes based on their lower bounds as well as the number of samples they capture, prioritizing prefixes that capture few samples as well as those that are more accurate</li>
+                        </ul>
+                        The curiosity metric is still being tweaked - further improvements on it might be added in the future.
+                        <br>
+                        Depending on the particular dataset, any of the above ordering metrics could be best.
+                        <br>
+                        <br>
+                        CORELS also uses a symmetry-aware map to eliminate prefixes that are permutations of each other from the search space. This map provides an important new tool for pruning the trie, since we can implement a tighter bound than only the objective. Specifically, if the lower bound of a particular prefix is greater than the lower bound of another prefix that is simply a permutation of the first prefix, then we can throw the first prefix out. This is because two different permutations of the same group of rules will capture the same set of samples, which means adding rules to the permutation with the higher lower bound would never yield a rule list with an objective lower than that of the best rule list starting with the prefix permutation with the better lower bound. 
+                        <br>
+                        <br>
+                        This permutation map is implemented in two ways - either using the canonical order of rules in a prefix as the map keys (a prefix permutation map), or using the array of captured samples as the keys (a captured vector map). The latter type could result in theoretically better results, as prefixes that are not permutations of each other but capture the same set of samples would be grouped together, but it requires far more memory than the former.
+                        <br>
+                        <br>
+                        <!--Finally, CORELS leverages two more bounds:
+                        <ul>
+                            <li>A lower bound on antecedent support, where rule list prefixes that do not capture less than the regularization constant times the number of samples are thrown out</li>
+                            <li>A lookahead bound, which adds the regularization constant to the lower bound of a rule list prefix to provide a tighter bound</li>
+                        </ul>
+                        The above two bounds can be disabled, but in almost all cases they help speed up the algorithm.
+                        <br>
+                        <br>-->
+                        A more in depth discussion of the above and further information about CORELS can be found in <a href="/corels/Larus-Stone_thesis.pdf">this wonderful paper</a>.
+                    </p>
+                    <br>
+      <!--              <h5>Applications</h5>
+                    <p>
+                        CORELS generates highly accurate models on datasets with relatively few rules, but many training samples.
+                        We have demonstrated that it can find rule lists that are as accurate, if not more so, as more complex black-box models that utilize non-human-readable tools such as neural nets. For instance, when trained
+                    </p>-->
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="/js/jquery-3.3.1.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

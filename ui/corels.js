@@ -10,12 +10,6 @@ var randomstring = require("randomstring");
 var SocketIOFile = require('socket.io-file');
 
 var app = express();
-
-/*var options = {
-	key: fs.readFileSync('../../corels.eecs.harvard.edu.key'),
-	cert: fs.readFileSync('../../corels.eecs.harvard.edu.cert')
-};*/
-
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 
@@ -30,6 +24,7 @@ exec("mkdir -p " + dir_upload_root, {}, function (err, stdout, stderr) {
 });
 
 app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/node_modules'));
 
 var used_ids = [];
 
@@ -42,51 +37,6 @@ function nextid() {
 
   used_ids.push(s);
   return s;
-}
-
-// display form
-app.get('/', function (req, res) {
-  return res.sendFile(__dirname + '/form.html');
-});
-
-//app.get('/socket.io.js', (req, res, next) => {
-//  return res.sendFile(__dirname + '/node_modules/socket.io-client/dist/socket.io.js');
-//});
-  
-//app.get('/socket.io-file-client.js', (req, res, next) => {
-//  return res.sendFile(__dirname + '/node_modules/socket.io-file-client/socket.io-file-client.js');
-//});
-
-function run_corels(params, out_path, label_path, minor_path, socket, end) {
-  var args = [];
-  var command = __dirname + "/../bbcache/src/corels";
-  
-  args.push("-r " + params.regularization);
-  args.push("-n " + params.max_nodes);
-  args.push("-v " + params.verbosity);
-  args.push(params.search_policy);
-  args.push(params.prefix_map);
-  args.push(out_path);
-  args.push(label_path);
-  if(minor_path)
-    args.push(minor_path);
-
-  socket.emit('console', '\nRunning corels\n');
-  var corels = spawn(command, args, { shell: true });
-
-  corels.on('close', function() {
-    exec("rm -rf " + out_path + " " + label_path + " " + minor_path, {}, function(err, stdout, stderr) {
-      if(err) console.log(err);
-    });
-
-    end();
-  });
-  corels.stderr.on('data', function(data) {
-    socket.emit('console', data.toString());
-  });
-  corels.stdout.on('data', function(data) {
-    socket.emit('console', data.toString());
-  });
 }
 
 io.on('connection', function(socket) {
@@ -131,24 +81,24 @@ io.on('connection', function(socket) {
 
   function run_corels(params, out_path, label_path, minor_path, socket, end) {
     var args = [];
-    var command = __dirname + "/../corels/src/corels";
-    
+    var command = __dirname + "/../bbcache/src/corels";
+
     args.push("-r " + params.regularization);
     args.push("-n " + params.max_nodes);
     args.push("-v " + params.verbosity);
     args.push(params.search_policy);
     args.push(params.prefix_map);
-    args.push(out_path);
-    args.push(label_path);
+    args.push("\"" + out_path + "\"");
+    args.push("\"" + label_path + "\"");
     if(minor_path)
-      args.push(minor_path);
+      args.push("\"" + minor_path + "\"");
 
     socket.emit('console', '\nRunning corels\n');
-    corels_process = spawn(command, args, { shell: true });
+    corels_process = spawn(command, args, { shell: true, env: { "LD_LIBRARY_PATH": "/usr/local/lib:/usr/lib:/usr/local/lib64:/usr/lib64" } });
 
     corels_process.on('close', function() {
       corels_process = null;
-      exec("rm -rf " + out_path + " " + label_path + " " + minor_path, {}, function(err, stdout, stderr) {
+      exec("rm -rf \"" + out_path + "\" \"" + label_path + "\" \"" + minor_path + "\"", {}, function(err, stdout, stderr) {
         if(err) console.log(err);
       });
 
@@ -189,9 +139,9 @@ io.on('connection', function(socket) {
       var args = [];
       args.push("-c " + fileInfo.data.max_card);
       args.push("-s " + fileInfo.data.min_support);
-      args.push(csv_path);
-      args.push(out_path);
-      args.push(label_path);
+      args.push("\"" + csv_path + "\"");
+      args.push("\"" + out_path + "\"");
+      args.push("\"" + label_path + "\"");
       var command = __dirname + "/../utils/mine";
 
       socket.emit('console', '\nRunning miner\n');
@@ -201,17 +151,17 @@ io.on('connection', function(socket) {
 
       mine_process.on('close', function() {
         mine_process = null;
-        exec("rm -f " + csv_path, {}, function(err, stdout, stderr) {
+        exec("rm -f \"" + csv_path + "\"", {}, function(err, stdout, stderr) {
           if(err) console.log(err);
         });
 
         if(fdata.make_minor) {
           var minor_args = [];
-          minor_args.push(out_path);
-          minor_args.push(label_path);
+          minor_args.push("\"" + out_path + "\"");
+          minor_args.push("\"" + label_path + "\"");
 
           minor_path = dir_upload + "/minor_file.minor";
-          minor_args.push(minor_path);
+          minor_args.push("\"" + minor_path + "\"");
 
           var minor_command = __dirname + "/../utils/minority";
 
@@ -256,11 +206,11 @@ io.on('connection', function(socket) {
       if(out_path && label_path && (!fileInfo.data.use_minor || minor_path)) {
         if(!fileInfo.data.use_minor && fileInfo.data.make_minor) {
           var minor_args = [];
-          minor_args.push(out_path);
-          minor_args.push(label_path);
+          minor_args.push("\"" + out_path + "\"");
+          minor_args.push("\"" + label_path + "\"");
 
           minor_path = dir_upload + "/minor_file.minor";
-          minor_args.push(minor_path);
+          minor_args.push("\"" + minor_path + "\"");
 
           var minor_command = __dirname + "/../utils/minority";
 
