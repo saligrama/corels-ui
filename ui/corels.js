@@ -94,7 +94,14 @@ io.on('connection', function(socket) {
     socket.emit('console', '\nRunning corels\n');
     corels_process = spawn(command, args, { shell: true, env: { "LD_LIBRARY_PATH": "/usr/local/lib:/usr/lib:/usr/local/lib64:/usr/lib64" } });
 
+    var count = 1;
+
+    var interval = setInterval(function() {
+      socket.emit('console', (count++ * 10) + ' seconds elapsed\n');
+    }, 10000);
+
     corels_process.on('close', function() {
+      clearInterval(interval);
       corels_process = null;
       exec("rm -rf \"" + out_path + "\" \"" + label_path + "\" \"" + minor_path + "\"", {}, function(err, stdout, stderr) {
         if(err) console.log(err);

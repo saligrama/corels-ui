@@ -224,6 +224,10 @@
                         m_alert(alert_e, "Minimum support must be less than or equal to 0.5 and greater than or equal to 0");
                         data = null;
                     }
+                    else if(support < parseFloat(data.regularization)) {
+                        m_alert(alert_e, "You cannot use a minimum support that is less than the regularization coefficient");
+                        data = null;
+                    }
                     else if(card < 1) {
                         m_alert(alert_e, "Max cardinality must be greater than 0");
                         data = null;
@@ -425,7 +429,7 @@
                             <div class="col-lg-5">
                                 <div class="card">
                                     <div class="card-header">
-                                        CSV Data
+                                        Data and Parameters
                                     </div>
                                     <div class="card-body">
                                         <div id="csv-group" class="col-12">
@@ -459,7 +463,7 @@
                             <div class="col-lg-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        Parameters
+                                        Secondary Parameters
                                     </div>
                                     <div class="card-body">
                                         <div class="col-12">
