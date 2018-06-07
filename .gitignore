@@ -9,5 +9,4 @@ logs/
 Vagrantfile
 .vagrant/
 logs/*
-!logs/.gitkeep
 package-lock.json
