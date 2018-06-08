@@ -101,7 +101,7 @@
     }
 
     window.onload = function() {
-        var socket = io.connect("localhost:8080/");
+        var socket = io.connect("https://corels.eecs.harvard.edu/");
         var uploader = new SocketIOFileClient(socket);
 
         var running = false;
@@ -390,7 +390,7 @@
                     <a class="btn btn-primary" href="#" data-toggle="modal" data-target="#csv_format">CSV data format</a>
                     <br>
                     <br>
-                    <p style="text-align:left">Here are three example csv files containing datasets. Simply download one, upload it to the 'CSV data' panel below, and press 'Submit' to see CORELS in action.</p>
+                    <p style="text-align:left">Here are three example csv files containing datasets. Simply download one, upload it to the 'CSV data' panel below, and press 'Submit' to see CORELS in action. Or, you can run CORELS with a default dataset (COMPAS) without having to download anything by clicking on the link below the file upload field.</p>
                     <a class="btn btn-secondary" href="/corels/compas.csv">COMPAS</a>
                     <a class="btn btn-secondary" href="/corels/monks1_binary.csv">Monks1</a>
                     <a class="btn btn-secondary" href="/corels/haberman_binary.csv">Haberman</a>
