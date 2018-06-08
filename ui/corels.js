@@ -53,10 +53,14 @@ io.on('connection', function(socket) {
     });
   });
 
-  socket.on('start-run', function() {
+  socket.on('start-run', function(data) {
     running = true;
-    socket.emit('console', '\nUploading files...\n');
     socket.emit('start-run-confirm');
+    if(data && data.use_default) {
+        begin_run({ data: data });
+    }
+    else
+        socket.emit('console', '\nUploading files...\n');
   });
 
   var running = false;
@@ -117,26 +121,14 @@ io.on('connection', function(socket) {
     });
   }
 
-  uploader.on('start', function(fileInfo) {
-    console.log("Begun uploading: ");
-    console.log(fileInfo);
-  });
-
-  socket.on('reset', function() {
-    running = false;
-    if(minor_process)
-      minor_process.kill();
-    if(corels_process)
-      corels_process.kill();
-    if(mine_process)
-      mine_process.kill();
-    exec("rm -f " + dir_upload + "/*");
-    socket.emit('console', '\nReset\n');
-  });
-
-  uploader.on('complete', function(fileInfo) {
+  function begin_run(fileInfo) {
     if(fileInfo.data.mine && fileInfo.data.type == "csv") {
-      var csv_path = fileInfo.uploadDir;
+      var csv_path = "";
+      if(fileInfo.data.use_default)
+        csv_path = __dirname + "/public/corels/compas.csv";
+      else
+        csv_path = fileInfo.uploadDir;
+      
       out_path = dir_upload + "/out_file.out";
       label_path = dir_upload + "/label_file.label";
       minor_path = "";
@@ -156,9 +148,11 @@ io.on('connection', function(socket) {
 
       mine_process.on('close', function() {
         mine_process = null;
-        exec("rm -f \"" + csv_path + "\"", {}, function(err, stdout, stderr) {
-          if(err) console.log(err);
-        });
+        if(!fileInfo.data.use_default) {
+          exec("rm -f \"" + csv_path + "\"", {}, function(err, stdout, stderr) {
+            if(err) console.log(err);
+          });
+        }
 
         if(fdata.make_minor) {
           var minor_args = [];
@@ -243,6 +237,27 @@ io.on('connection', function(socket) {
         }
       }
     }
+  }
+
+  uploader.on('start', function(fileInfo) {
+    console.log("Begun uploading: ");
+    console.log(fileInfo);
+  });
+
+  socket.on('reset', function() {
+    running = false;
+    if(minor_process)
+      minor_process.kill();
+    if(corels_process)
+      corels_process.kill();
+    if(mine_process)
+      mine_process.kill();
+    exec("rm -f " + dir_upload + "/*");
+    socket.emit('console', '\nReset\n');
+  });
+
+  uploader.on('complete', function(fileInfo) {
+    begin_run(fileInfo);
   });
 });
 

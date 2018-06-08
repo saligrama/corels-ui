@@ -71,6 +71,17 @@
     #corels-data-toggle {
         margin-bottom: 20px;
     }
+    #default {
+        margin-top: 10px;
+    }
+    #using-default {
+        font-size: 16px;
+        padding: 10px;
+        border-radius: 3px;
+        background-color: #eee;
+        display: block;
+        width: 100%;
+    }
     </style>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -90,7 +101,7 @@
     }
 
     window.onload = function() {
-        var socket = io.connect("https://corels.eecs.harvard.edu/");
+        var socket = io.connect("localhost:8080/");
         var uploader = new SocketIOFileClient(socket);
 
         var running = false;
@@ -234,14 +245,21 @@
                     }
 
                     if(data) {
-                        var csv = document.getElementById("csv");
+                        if(document.getElementById("using-default").style.display == "none") {
+                            var csv = document.getElementById("csv");
 
-                        if(!csv.value)
-                            m_alert(alert_e, "Please upload a csv file");
+                            if(!csv.value)
+                                m_alert(alert_e, "Please upload a csv file");
+                            else {
+                                socket.emit("start-run");
+                                running = true;
+                                uploader.upload(csv, { data: data });
+                            }
+                        }
                         else {
-                            socket.emit("start-run");
+                            data.use_default = true;
+                            socket.emit("start-run", data);
                             running = true;
-                            uploader.upload(csv, { data: data });
                         }
                     }
                 }
@@ -293,6 +311,24 @@
                 e.style.display = "block";
             else
                 e.style.display = "none";
+        };
+
+        document.getElementById("default").onclick = function(e) {
+            e.preventDefault();
+
+            var file = document.getElementById("csv");
+            var using = document.getElementById("using-default");
+
+            if(file.style.display == "none") {
+                this.innerHTML = "Use default dataset (COMPAS)";
+                file.style.display = "block";
+                using.style.display = "none";
+            }
+            else {
+                this.innerHTML = "Upload dataset";
+                file.style.display = "none";
+                using.style.display = "block";
+            }
         };
     };
     </script>
@@ -355,9 +391,9 @@
                     <br>
                     <br>
                     <p style="text-align:left">Here are three example csv files containing datasets. Simply download one, upload it to the 'CSV data' panel below, and press 'Submit' to see CORELS in action.</p>
-                    <a class="btn btn-secondary" href="/corels/votes_binary.csv">Dataset 1</a>
-                    <a class="btn btn-secondary" href="/corels/monks1_binary.csv">Dataset 2</a>
-                    <a class="btn btn-secondary" href="/corels/haberman_binary.csv">Dataset 3</a>
+                    <a class="btn btn-secondary" href="/corels/compas.csv">COMPAS</a>
+                    <a class="btn btn-secondary" href="/corels/monks1_binary.csv">Monks1</a>
+                    <a class="btn btn-secondary" href="/corels/haberman_binary.csv">Haberman</a>
                 </div>
                 <br>
 <!--                <div id="corels_format" tabindex="-1" class="modal fade" role="dialog">
@@ -436,6 +472,8 @@
                                             <div class="row">
                                                 <label for="csv">Sample data (extension ".csv")</label>
                                                 <input type="file" id="csv" name="csv" class="form-control">
+                                                <div id="using-default" style="display:none">Using default dataset (COMPAS)</div>
+                                                <a href="#" id="default">Use default dataset (COMPAS)</a>
                                             </div>
                                             <div class="progress" id="csv_progress">
                                                 <div class="progress-bar" role="progressbar"></div>
