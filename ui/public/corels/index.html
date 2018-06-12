@@ -69,7 +69,7 @@
                     <p>
                         CORELS is a supervised learning algorithm, trained on a dataset of n rule antecedents, where each antecedent captures some subset of m samples. These antecedents must be pre-mined - that is, CORELS is inputted not a list of samples with their associated features, but a list of rule antecedents, each represented by a bitvector of length m. The i'th bit of a rule's bitvector represents whether that antecedent captures the i'th sample (1) or if it doesn't (0). 
                         All features are binary, as is the classification of all the rules.
-                        Since all the sample features as well as the rule list classifications must be binary, continuous values or multi-class features must be broken down into categories. For instance, if a particular data set contained samples of people, and one of its features was age, instead of having one continuous 'age' feature you would have to break it down into 
+                        Since all the sample features as well as the rule list classifications must be binary, continuous values or multi-class features must be broken down into categories. For instance, if a particular data set contained samples of people, and one of its features was age, instead of having one continuous 'age' feature you would have to break it down into discrete categories that could then become binary features. For instance, if the range of ages of your training set was 0 - 64, you could reasonably break the age feature into 4 binary features, <code>age < 16</code>, <code>age < 32</code>, <code>age < 32</code>, and <code>age < 64</code>. 
                     </p>
                     <br>
                     <p>
@@ -94,8 +94,8 @@
                             <li><code>misc</code> is the fraction of misclassified samples</li>
                             <li><code>c</code> is a user-defined constant (called the regularization constant). A larger value of this penalizes larger rule lists - it can be thought of as an accuracy penalty for each added rule to the list (if it is set to 0.01, for instance, every added rule would incur a penalty equal to misclassifying 1% of the samples)</li>
                         </ul>
-                        For each prefix being evaluated in the trie, CORELS calculates a lower bound:
-                        <pre><code>b(p, x, y) = misc(p, x, y) + c * length(d)</code></pre>
+                        For each prefix (again, a rule list prefix is a rule list without a default prediction) being evaluated in the trie, CORELS calculates a lower bound:
+                        <pre><code>b(p, x, y) = misc(p, x, y) + c * length(p)</code></pre>
                         If this lower bound is greater than the lowest objective found so far, then this prefix along with every node that is a child of it can be removed from the tree, since any rule list beginning with that prefix must necessarily have an objective that is greater than the best objective found so far.
                         <br>
                         <br>
