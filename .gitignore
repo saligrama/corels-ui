@@ -9,4 +9,5 @@ logs/
 Vagrantfile
 .vagrant/
 logs/*
+*.swp
 package-lock.json
