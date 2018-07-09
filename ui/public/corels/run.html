@@ -4,334 +4,392 @@
 <link rel="stylesheet" type="text/css" href="/css/main.css">
 
 <head>
-    <title>CORELS: Learning Certifiably Optimal RulE ListS</title>
-    
-    <style>
-    .data-title {
-        text-align: center;
-    }
-    .data-format {
-        text-align: center;
-        margin-top: 6px;
-    }
-    .alert {
-        margin-top: 10px;
-    }
-    .progress {
-        display: none;
-        margin: 5px 0px;
-    }
-    .output_heading h3 {
-        display: inline-block;
-        padding: 8px;
-    }
-    .output_heading {
-        height: 54px;
-    }
-    #abort {
-        float: right;
-        margin-top: -5px;
-    }
-    #console {
-      width: 100%;
-      height: 500px;
-      background-color: black;
-      color: white;
-      padding: 10px;
-      border: 2px solid #666;
-      overflow-y: auto;
-      overflow-x: auto;
-      white-space: nowrap;
-      font-family: "Courier New", Courier, monospace;
-    }
-    .card-body {
-        padding: 30px;
-    }
-    .card {
-        margin: 5px;
-    }
-    .card-header {
-        font-size: 19px;
-    }
-    .card-footer {
-        text-align: center;
-    }
-    .panel-cont {
-        padding-top: 20px;
-        border-top: 1px solid #ddd;
-    }
-    #corels-data {
-        display: none;
-    }
-    .corels-data-wrap {
-        margin-top: 30px;
-        padding-top: 15px;
-        text-align: center;
-    }
-    #corels-data-toggle {
-        margin-bottom: 20px;
-    }
-    #default {
-        margin-top: 10px;
-    }
-    #using-default {
-        font-size: 16px;
-        padding: 10px;
-        border-radius: 3px;
-        background-color: #eee;
-        display: block;
-        width: 100%;
-    }
-    </style>
+<title>CORELS: Learning Certifiably Optimal RulE ListS</title>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/socket.io-file-client/socket.io-file-client.js"></script>
-    
-    <script>
-    function m_alert(e, mes) {
-      var html = 
-          "<div class='alert alert-danger' role='alert' style='margin-bottom: 0px;'>" +
-              "<button type='button' class='close' data-dismiss='alert'>" +
-                  "<span>&times;</span>" +
-              "</button>" +
-              mes +
-          "</div>";
+<style>
+.data-title {
+    text-align: center;
+}
+.data-format {
+    text-align: center;
+    margin-top: 6px;
+}
+.alert {
+    margin-top: 10px;
+}
+.progress {
+    display: none;
+    margin: 5px 0px;
+}
+.output_heading h3 {
+    display: inline-block;
+    padding: 8px;
+}
+.output_heading {
+    height: 54px;
+}
+#abort {
+    float: right;
+    margin-top: -5px;
+}
+#console {
+  width: 100%;
+  height: 500px;
+  background-color: black;
+  color: white;
+  padding: 10px;
+  border: 2px solid #666;
+  overflow-y: auto;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-family: "Courier New", Courier, monospace;
+}
+.card-body {
+    padding: 30px;
+}
+.card {
+    margin: 5px;
+}
+.card-header {
+    font-size: 19px;
+}
+.card-footer {
+    text-align: center;
+}
+.panel-cont {
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+#corels-data {
+    display: none;
+}
+.corels-data-wrap {
+    margin-top: 30px;
+    padding-top: 15px;
+    text-align: center;
+}
+#corels-data-toggle {
+    margin-bottom: 20px;
+}
+#default {
+    margin-top: 10px;
+}
+#using-default {
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 3px;
+    background-color: #eee;
+    display: block;
+    width: 100%;
+}
+#quickrun {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+#csv {
+    display: none;
+}
+</style>
 
-      e.innerHTML = html;
-    }
+<script src="/socket.io/socket.io.js"></script>
+<script src="/socket.io-file-client/socket.io-file-client.js"></script>
 
-    window.onload = function() {
-        var socket = io.connect("https://corels.eecs.harvard.edu/");
-        var uploader = new SocketIOFileClient(socket);
+<script>
+function m_alert(e, mes) {
+  var html = 
+      "<div class='alert alert-danger' role='alert' style='margin-bottom: 0px;'>" +
+          "<button type='button' class='close' data-dismiss='alert'>" +
+              "<span>&times;</span>" +
+          "</button>" +
+          mes +
+      "</div>";
 
-        var running = false;
- 
-        var files = ["csv", "out", "label", "minor"];
+  e.innerHTML = html;
+}
 
-        uploader.on("stream", function(fileInfo) {
-            var percent = Math.round(100 * fileInfo.sent / fileInfo.size);
-            percent = percent.toString() + "%";
+window.onload = function() {
+    var socket = io.connect("https://corels.eecs.harvard.edu/");
+    var uploader = new SocketIOFileClient(socket);
 
-            files.forEach(function(e) {
-                if(fileInfo.data.type == e)
-                    document.getElementById(e + "_progress").children[0].style.width = percent;
-            });
+    var running = false;
+
+    var files = ["csv", "out", "label", "minor"];
+
+    uploader.on("stream", function(fileInfo) {
+        var percent = Math.round(100 * fileInfo.sent / fileInfo.size);
+        percent = percent.toString() + "%";
+
+        files.forEach(function(e) {
+            if(fileInfo.data.type == e)
+                document.getElementById(e + "_progress").children[0].style.width = percent;
         });
+    });
 
-        function reset() {
-            if(!running)
-                return;
+    function reset() {
+        if(!running)
+            return;
 
-            files.forEach(function(e) {
+        files.forEach(function(e) {
+            document.getElementById(e + "_progress").style.display = "none";
+        });
+        running = false;
+
+        var curr = uploader.getUploadInfo()
+
+        for(var key in curr) {
+            uploader.abort(key);
+        }
+    
+        socket.emit("reset");
+    }
+
+    document.getElementById("abort").onclick = function(e) { e.preventDefault(); reset(); }
+
+    uploader.on("error", reset);
+
+    uploader.on("complete", function(fileInfo) {
+        files.forEach(function(e) {
+            if(fileInfo.data.type == e)
                 document.getElementById(e + "_progress").style.display = "none";
-            });
-            running = false;
-
-            var curr = uploader.getUploadInfo()
-
-            for(var key in curr) {
-                uploader.abort(key);
+        });
+    });
+    
+    uploader.on("start", function(fileInfo) {
+        files.forEach(function(e) {
+            if(fileInfo.data.type == e) {
+                document.getElementById(e + "_progress").style.display = "block";
+                document.getElementById(e + "_progress").children[0].style.width = "0%";
             }
+        });
+    });
+
+    socket.on("console", function(data) {
+        var cons = document.getElementById("console");
+        cons.children[0].innerHTML += data.replace(/\n/g, "<br \>");
+        cons.scrollBy(0, 1000000);
+    });
+
+    socket.on("done-run", function() {
+        running = false;
+    });
+
+    function getCorelsOptions() {
+        var data = {};
+
+        data.regularization = document.getElementById("regularization").value;
+        data.max_nodes = document.getElementById("max_nodes").value;
+        data.search_policy = document.getElementById("search_policy").value;
+        data.prefix_map = document.getElementById("prefix_map").value;
+        data.verbosity = "";
+
+        var checks = document.getElementById("verbosity-wrap").querySelectorAll("input[type=checkbox]");
+
+        checks.forEach(function(e) {
+            if(e.checked)
+                data.verbosity += e.id + ",";
+        });
+
+        if(data.verbosity)
+            data.verbosity = data.verbosity.slice(0, -1);
+        else
+            data.verbosity = "silent";
         
-            socket.emit("reset");
+        if(data.verbosity.includes("samples") && !data.verbosity.includes("rule") && !data.verbosity.includes("label")) {
+            m_alert(alert_e, "To print samples, either printing rules or printing labels must be included");
+            data = null;
         }
-
-        document.getElementById("abort").onclick = function(e) { e.preventDefault(); reset(); }
-
-        uploader.on("error", reset);
-
-        uploader.on("complete", function(fileInfo) {
-            files.forEach(function(e) {
-                if(fileInfo.data.type == e)
-                    document.getElementById(e + "_progress").style.display = "none";
-            });
-        });
-        
-        uploader.on("start", function(fileInfo) {
-            files.forEach(function(e) {
-                if(fileInfo.data.type == e) {
-                    document.getElementById(e + "_progress").style.display = "block";
-                    document.getElementById(e + "_progress").children[0].style.width = "0%";
-                }
-            });
-        });
-
-        socket.on("console", function(data) {
-            var cons = document.getElementById("console");
-            cons.children[0].innerHTML += data.replace(/\n/g, "<br \>");
-            cons.scrollBy(0, 1000000);
-        });
-
-        socket.on("done-run", function() {
-            running = false;
-        });
-
-        function getCorelsOptions() {
-            var data = {};
-
-            data.regularization = document.getElementById("regularization").value;
-            data.max_nodes = document.getElementById("max_nodes").value;
-            data.search_policy = document.getElementById("search_policy").value;
-            data.prefix_map = document.getElementById("prefix_map").value;
-            data.verbosity = "";
-
-            var checks = document.getElementById("verbosity-wrap").querySelectorAll("input[type=checkbox]");
-
-            checks.forEach(function(e) {
-                if(e.checked)
-                    data.verbosity += e.id + ",";
-            });
-
-            if(data.verbosity)
-                data.verbosity = data.verbosity.slice(0, -1);
-            else
-                data.verbosity = "silent";
             
-            if(data.verbosity.includes("samples") && !data.verbosity.includes("rule") && !data.verbosity.includes("label")) {
-                m_alert(alert_e, "To print samples, either printing rules or printing labels must be included");
-                data = null;
-            }
-                
 
-            var reg = parseFloat(data.regularization);
-            var nodes = parseInt(data.max_nodes);
-               
-            var alert_e = document.getElementById("parameters_alert_wrap");
+        var reg = parseFloat(data.regularization);
+        var nodes = parseInt(data.max_nodes);
+           
+        var alert_e = document.getElementById("parameters_alert_wrap");
 
-            if(reg < 0.0) {
-                m_alert(alert_e, "Regularization constant must be greater than or equal to 0");
-                data = null;
-            }
-            else if(nodes <= 0) {
-                m_alert(alert_e, "Maximum number of nodes must be greater than 0");
-                data = null;
-            }
-
-            return data;
+        if(reg < 0.0) {
+            m_alert(alert_e, "Regularization constant must be greater than or equal to 0");
+            data = null;
+        }
+        else if(nodes <= 0) {
+            m_alert(alert_e, "Maximum number of nodes must be greater than 0");
+            data = null;
         }
 
-        document.getElementById("csv_submit").onclick = function(e) {
-            e.preventDefault();
+        return data;
+    }
+        
+    function csv_submit()
+    {
+        if(running)
+            return;
 
-            if(running)
-                return;
+        //socket.on("start-run-confirm", function() {
+            var data = getCorelsOptions();
 
-            //socket.on("start-run-confirm", function() {
-                var data = getCorelsOptions();
+            if(data) {
+                data.make_minor = true;
+                data.min_support = document.getElementById("min_support").value;
+                data.max_card = document.getElementById("max_card").value;
+                data.mine = 1;
+                data.type = "csv";
+                
+                var support = parseFloat(data.min_support);
+                var card = parseInt(data.max_card);
+
+                var alert_e = document.getElementById("csv_alert_wrap");
+
+                if(support < 0.0 || support > 0.5) {
+                    m_alert(alert_e, "Minimum support must be less than or equal to 0.5 and greater than or equal to 0");
+                    data = null;
+                }
+                else if(support < parseFloat(data.regularization)) {
+                    m_alert(alert_e, "You cannot use a minimum support that is less than the regularization coefficient");
+                    data = null;
+                }
+                else if(card < 1) {
+                    m_alert(alert_e, "Max cardinality must be greater than 0");
+                    data = null;
+                }
 
                 if(data) {
-                    data.make_minor = true;
-                    data.min_support = document.getElementById("min_support").value;
-                    data.max_card = document.getElementById("max_card").value;
-                    data.mine = 1;
-                    data.type = "csv";
-                    
-                    var support = parseFloat(data.min_support);
-                    var card = parseInt(data.max_card);
+                    if(document.getElementById("using-default").style.display == "none") {
+                        var csv = document.getElementById("csv");
 
-                    var alert_e = document.getElementById("csv_alert_wrap");
-
-                    if(support < 0.0 || support > 0.5) {
-                        m_alert(alert_e, "Minimum support must be less than or equal to 0.5 and greater than or equal to 0");
-                        data = null;
-                    }
-                    else if(support < parseFloat(data.regularization)) {
-                        m_alert(alert_e, "You cannot use a minimum support that is less than the regularization coefficient");
-                        data = null;
-                    }
-                    else if(card < 1) {
-                        m_alert(alert_e, "Max cardinality must be greater than 0");
-                        data = null;
-                    }
-
-                    if(data) {
-                        if(document.getElementById("using-default").style.display == "none") {
-                            var csv = document.getElementById("csv");
-
-                            if(!csv.value)
-                                m_alert(alert_e, "Please upload a csv file");
-                            else {
-                                socket.emit("start-run");
-                                running = true;
-                                uploader.upload(csv, { data: data });
-                            }
-                        }
+                        if(!csv.value)
+                            m_alert(alert_e, "Please upload a csv file");
                         else {
-                            data.use_default = true;
-                            socket.emit("start-run", data);
+                            socket.emit("start-run");
                             running = true;
+                            uploader.upload(csv, { data: data });
                         }
                     }
-                }
-            //});
-        };
-                     
-        document.getElementById("corels_submit").onclick = function(e) {
-            e.preventDefault();
-
-            if(running)
-              return;
-
-            //socket.on("start-run-confirm", function() {
-                var data = getCorelsOptions();
-                
-                if(data) {
-                    var out = document.getElementById("out");
-                    var label = document.getElementById("label");
-                    var minor = document.getElementById("minor");
-            
-                    if(document.getElementById("generate_minor").checked)
-                      data.make_minor = true;
-
-                    if(out.value && label.value) {
-                        socket.emit("start-run");
+                    else {
+                        data.use_default = true;
+                        socket.emit("start-run", data);
                         running = true;
-
-                        if(minor.value) {
-                            data.use_minor = true;
-                            uploader.upload(minor, { data: Object.assign({ type: "minor" }, data)});
-                        }
-
-                        uploader.upload(out, { data: Object.assign({ type: "out" }, data)});
-                        uploader.upload(label, { data: Object.assign({ type: "label" }, data)});
                     }
-                    else
-                        m_alert(document.getElementById("corels_alert_wrap"), "Please upload a .out and a .label file");
                 }
-            //});
-        };
-
-        document.getElementById("corels-data-toggle").onclick = function(ev) {
-            ev.preventDefault();
-
-            var e = document.getElementById("corels-data");
-            var curr = e.style.display;
-
-            if(curr != "block")
-                e.style.display = "block";
-            else
-                e.style.display = "none";
-        };
-
-        document.getElementById("default").onclick = function(e) {
-            e.preventDefault();
-
-            var file = document.getElementById("csv");
-            var using = document.getElementById("using-default");
-
-            if(file.style.display == "none") {
-                this.innerHTML = "Use default dataset (COMPAS)";
-                file.style.display = "block";
-                using.style.display = "none";
             }
-            else {
-                this.innerHTML = "Upload dataset";
-                file.style.display = "none";
-                using.style.display = "block";
+        //});
+    }
+    
+    document.getElementById("csv_submit").onclick = function(e) {
+        e.preventDefault();
+        
+        csv_submit();
+    }
+    
+    function getPosition(el) {
+        var xPos = 0;
+        var yPos = 0;
+
+        while (el) {
+            if (el.tagName == "BODY") {
+                // deal with browser quirks with body/window/document and page scroll
+                var xScroll = el.scrollLeft || document.documentElement.scrollLeft;
+                var yScroll = el.scrollTop || document.documentElement.scrollTop;
+
+                xPos += (el.offsetLeft - xScroll + el.clientLeft);
+                yPos += (el.offsetTop - yScroll + el.clientTop);
+            } else {
+                // for all other non-BODY elements
+                xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
+                yPos += (el.offsetTop - el.scrollTop + el.clientTop);
             }
+
+            el = el.offsetParent;
+        }
+
+        return {
+            x: xPos,
+            y: yPos
         };
+    }
+
+    document.getElementById("quickrun").onclick = function(e) {
+        e.preventDefault();
+        
+        var pos = getPosition(document.getElementById("console")).y - 100;
+
+        console.log(pos);
+
+        var body = document.body;
+        var html = document.documentElement;
+
+        body.scrollTop = pos;
+        html.scrollTop = pos;
+
+        csv_submit();
+    }
+                 
+    document.getElementById("corels_submit").onclick = function(e) {
+        e.preventDefault();
+
+        if(running)
+          return;
+
+        //socket.on("start-run-confirm", function() {
+            var data = getCorelsOptions();
+            
+            if(data) {
+                var out = document.getElementById("out");
+                var label = document.getElementById("label");
+                var minor = document.getElementById("minor");
+        
+                if(document.getElementById("generate_minor").checked)
+                  data.make_minor = true;
+
+                if(out.value && label.value) {
+                    socket.emit("start-run");
+                    running = true;
+
+                    if(minor.value) {
+                        data.use_minor = true;
+                        uploader.upload(minor, { data: Object.assign({ type: "minor" }, data)});
+                    }
+
+                    uploader.upload(out, { data: Object.assign({ type: "out" }, data)});
+                    uploader.upload(label, { data: Object.assign({ type: "label" }, data)});
+                }
+                else
+                    m_alert(document.getElementById("corels_alert_wrap"), "Please upload a .out and a .label file");
+            }
+        //});
     };
-    </script>
+
+    document.getElementById("corels-data-toggle").onclick = function(ev) {
+        ev.preventDefault();
+
+        var e = document.getElementById("corels-data");
+        var curr = e.style.display;
+
+        if(curr != "block")
+            e.style.display = "block";
+        else
+            e.style.display = "none";
+    };
+
+    document.getElementById("default").onclick = function(e) {
+        e.preventDefault();
+
+        var file = document.getElementById("csv");
+        var using = document.getElementById("using-default");
+
+        console.log(file.style.display);
+
+        if(using.style.display != "none") {
+            this.innerHTML = "Use default dataset (COMPAS)";
+            file.style.display = "block";
+            using.style.display = "none";
+        }
+        else {
+            this.innerHTML = "Upload dataset";
+            file.style.display = "none";
+            using.style.display = "block";
+        }
+    };
+};
+</script>
 </head>
 
 <body>
@@ -345,17 +403,8 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/index.html">Home</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/whatarerulelists.html">What Are Rule Lists?</a>
-                    </li>
-                    <li class="nav-item active dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">CORELS</a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="/corels/index.html">About</a>
-                            <a class="dropdown-item" href="/corels/run.html">Run It Online!</a>
-                            <a class="dropdown-item" href="/corels/install.html">Install</a>
-                            <a class="dropdown-item" href="/corels/examples.html">Code Examples</a>
-                        </div> 
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/corels/index.html">CORELS</a>
                     </li>
                 </ul>
             </div>
@@ -366,7 +415,10 @@
             <div class="offset-3 col-6 offset-sm-0 col-sm-3 col-lg-2 text-center" style="margin-bottom: 30px">
                 <ul class="nav nav-pills flex-column">
                     <li class="nav-item">
-                        <a class="nav-link" href="/corels/">CORELS</a>
+                        <a class="nav-link" href="/corels/">About CORELS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/corels/whatarerulelists.html">What Are Rule Lists?</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="/corels/run.html">Run It Online!</a>
@@ -379,9 +431,12 @@
                     </li>
                 </ul>
             </div>
-            <div class="col-12 col-sm-9 col-lg-10 border-left" style="margin-bottom:40px;padding-left:30px;">
+            <div id="main-text" class="col-12 col-sm-9 col-lg-10 border-left" style="margin-bottom:40px;padding-left:30px;">
                 <h4 style="text-align: center"><b>Run CORELS entirely from your browser!</b></h4>
                 <br>
+                <div style="text-align: center">
+                    <button class="btn btn-primary" id="quickrun">Run with COMPAS dataset</button>
+                </div>
                 <p>
                     Here, you can upload a file containing any training dataset with all-binary features and a single binary classification, and then press 'Submit' to have CORELS generate a rule list model from it. To do this, CORELS will generate rule antecedents from the features of your dataset - first one antecedent will be generated for each feature, and then further antecedents will be generated by combining permutations of features. For example, if the dataset contains the features <code>is age > 25</code> and <code>is female</code>, then this rule list mining would produce three rule antecedents: <code>is age > 25</code>; <code>is female</code>; and <code>is age > 25 AND is female</code>. 
                     <br>
@@ -479,8 +534,8 @@
                                             <div class="row">
                                                 <label for="csv">Sample data (extension ".csv")</label>
                                                 <input type="file" id="csv" name="csv" class="form-control">
-                                                <div id="using-default" style="display:none">Using default dataset (COMPAS)</div>
-                                                <a href="#" id="default">Use default dataset (COMPAS)</a>
+                                                <div id="using-default">Using default dataset (COMPAS)</div>
+                                                <a href="#" id="default">Upload dataset</a>
                                             </div>
                                             <div class="progress" id="csv_progress">
                                                 <div class="progress-bar" role="progressbar"></div>
