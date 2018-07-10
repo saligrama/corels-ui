@@ -90,6 +90,9 @@
 #csv {
     display: none;
 }
+.progress-bar {
+    height: 100%;
+}
 </style>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -109,7 +112,8 @@ function m_alert(e, mes) {
 }
 
 window.onload = function() {
-    var socket = io.connect("https://corels.eecs.harvard.edu/");
+    //var socket = io.connect("https://corels.eecs.harvard.edu/");
+    var socket = io.connect("localhost:8080/");
     var uploader = new SocketIOFileClient(socket);
 
     var running = false;
@@ -332,9 +336,9 @@ window.onload = function() {
             var data = getCorelsOptions();
             
             if(data) {
-                var out = document.getElementById("out");
-                var label = document.getElementById("label");
-                var minor = document.getElementById("minor");
+                var out = document.getElementById("out_file");
+                var label = document.getElementById("label_file");
+                var minor = document.getElementById("minor_file");
         
                 if(document.getElementById("generate_minor").checked)
                   data.make_minor = true;
@@ -347,7 +351,7 @@ window.onload = function() {
                         data.use_minor = true;
                         uploader.upload(minor, { data: Object.assign({ type: "minor" }, data)});
                     }
-
+                    
                     uploader.upload(out, { data: Object.assign({ type: "out" }, data)});
                     uploader.upload(label, { data: Object.assign({ type: "label" }, data)});
                 }
@@ -659,24 +663,24 @@ window.onload = function() {
                                     <div class="card-body">
                                         <div class="col-12">
                                             <div class="row">
-                                                <label for="out">Training data (extension ".out")</label>
-                                                <input type="file" id="out" name="out" class="form-control">
+                                                <label for="out_file">Training data (extension ".out")</label>
+                                                <input type="file" id="out_file" name="out" class="form-control">
                                             </div>
                                             <div class="progress" id="out_progress">
                                                 <div class="progress-bar" role="progressbar"></div>
                                             </div>
                                             <br>
                                             <div class="row">
-                                                <label for="label">Training labels (extension ".label")</label>
-                                                <input type="file" id="label" name="label" class="form-control">
+                                                <label for="label_file">Training labels (extension ".label")</label>
+                                                <input type="file" id="label_file" name="label" class="form-control">
                                             </div>
                                             <div class="progress" id="label_progress">
                                                 <div class="progress-bar" role="progressbar"></div>
                                             </div>
                                             <br>
                                             <div class="row">
-                                                <label for="label">Equivalent Points file (optional, extension ".minor")</label>
-                                                <input type="file" id="minor" name="minor" class="form-control">
+                                                <label for="minor_file">Equivalent Points file (optional, extension ".minor")</label>
+                                                <input type="file" id="minor_file" name="minor" class="form-control">
                                             </div>
                                             <div class="progress" id="minor_progress">
                                                 <div class="progress-bar" role="progressbar"></div>
