@@ -47,12 +47,6 @@ io.on('connection', function(socket) {
     overwrite: true
   });
 
-  socket.on('disconnect', function() {
-    exec("rm -rf " + dir_upload, {}, function(err, stdout, stderr) {
-      if(err) console.log(err);
-    });
-  });
-
   socket.on('start-run', function(data) {
     running = true;
     socket.emit('start-run-confirm');
@@ -72,6 +66,18 @@ io.on('connection', function(socket) {
   var corels_process = null;
   var mine_process = null;
   var minor_process = null;
+
+  socket.on('disconnect', function() {
+    exec("rm -rf " + dir_upload, {}, function(err, stdout, stderr) {
+      if(err) console.log(err);
+    });
+    if(minor_process)
+      minor_process.kill();
+    if(corels_process)
+      corels_process.kill();
+    if(mine_process)
+      mine_process.kill();
+  });
 
   function done_run() {
     running = false;
