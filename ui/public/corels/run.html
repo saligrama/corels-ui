@@ -253,9 +253,8 @@ window.onload = function() {
                 }
 
                 if(data) {
-                    if(!force_default && document.getElementById("using-default").style.display == "none") {
-                        var csv = document.getElementById("csv");
-
+                    var csv = document.getElementById("csv");
+                    if(!force_default && csv.style.display != "none") {
                         if(!csv.value)
                             m_alert(alert_e, "Please upload a csv file");
                         else {
@@ -378,7 +377,7 @@ window.onload = function() {
 
         console.log(file.style.display);
 
-        if(using.style.display != "none") {
+        if(file.style.display == "none") {
             this.innerHTML = "Use default dataset (COMPAS)";
             file.style.display = "block";
             using.style.display = "none";
