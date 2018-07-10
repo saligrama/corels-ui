@@ -28,9 +28,12 @@
 .output_heading {
     height: 54px;
 }
-#abort {
+#abort, #clear {
     float: right;
     margin-top: -5px;
+}
+#abort {
+    margin-right: 10px;
 }
 #console {
   width: 100%;
@@ -388,6 +391,14 @@ window.onload = function() {
             using.style.display = "block";
         }
     };
+
+    document.getElementById("clear").onclick = function(e) {
+        e.preventDefault();
+
+        var cons = document.getElementById("console");
+        cons.scrollTop = 0;
+        cons.children[0].innerHTML = "";
+    }
 };
 </script>
 </head>
@@ -637,6 +648,7 @@ window.onload = function() {
                                 <div class="card">
                                     <div class="card-header output_heading">
                                         Output
+                                        <button class="btn btn-default" id="clear">Clear</button>
                                         <button class="btn btn-danger" id="abort">Abort</button>
                                     </div>
                                     <div class="card-body">
