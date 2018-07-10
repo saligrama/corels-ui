@@ -199,7 +199,7 @@ window.onload = function() {
         else
             data.verbosity = "silent";
         
-        if(data.verbosity.includes("samples") && !data.verbosity.includes("rule") && !data.verbosity.includes("label")) {
+        if(data.verbosity.indexOf("samples") != -1 && data.verbosity.indexOf("rule") == -1 && data.verbosity.indexOf("label") == -1) {
             m_alert(alert_e, "To print samples, either printing rules or printing labels must be included");
             data = null;
         }
