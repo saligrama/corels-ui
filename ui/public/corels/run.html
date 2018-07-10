@@ -222,7 +222,7 @@ window.onload = function() {
         return data;
     }
         
-    function csv_submit()
+    function csv_submit(force_default)
     {
         if(running)
             return;
@@ -256,7 +256,7 @@ window.onload = function() {
                 }
 
                 if(data) {
-                    if(document.getElementById("using-default").style.display == "none") {
+                    if(!force_default && document.getElementById("using-default").style.display == "none") {
                         var csv = document.getElementById("csv");
 
                         if(!csv.value)
@@ -280,7 +280,7 @@ window.onload = function() {
     document.getElementById("csv_submit").onclick = function(e) {
         e.preventDefault();
         
-        csv_submit();
+        csv_submit(false);
     }
     
     function getPosition(el) {
@@ -323,7 +323,7 @@ window.onload = function() {
         body.scrollTop = pos;
         html.scrollTop = pos;
 
-        csv_submit();
+        csv_submit(true);
     }
                  
     document.getElementById("corels_submit").onclick = function(e) {
