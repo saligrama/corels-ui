@@ -120,9 +120,9 @@ window.onload = function() {
         var percent = Math.round(100 * fileInfo.sent / fileInfo.size);
         percent = percent.toString() + "%";
 
-        for(var e in files) {
-            if(fileInfo.data.type == e)
-                document.getElementById(e + "_progress").children[0].style.width = percent;
+        for(var i = 0; i < files.length; i++) {
+            if(fileInfo.data.type == files[i])
+                document.getElementById(files[i] + "_progress").children[0].style.width = percent;
         }
     });
 
@@ -130,8 +130,8 @@ window.onload = function() {
         if(!running)
             return;
 
-        for(var e in files) {
-            document.getElementById(e + "_progress").style.display = "none";
+        for(var i = 0; i < files.length; i++) {
+            document.getElementById(files[i] + "_progress").style.display = "none";
         }
         running = false;
 
@@ -149,17 +149,17 @@ window.onload = function() {
     uploader.on("error", reset);
 
     uploader.on("complete", function(fileInfo) {
-        for(var e in files) {
-            if(fileInfo.data.type == e)
-                document.getElementById(e + "_progress").style.display = "none";
+        for(var i = 0; i < files.length; i++) {
+            if(fileInfo.data.type == files[i])
+                document.getElementById(files[i] + "_progress").style.display = "none";
         }
     });
     
     uploader.on("start", function(fileInfo) {
-        for(var e in files) {
-            if(fileInfo.data.type == e) {
-                document.getElementById(e + "_progress").style.display = "block";
-                document.getElementById(e + "_progress").children[0].style.width = "0%";
+        for(var i = 0; i < files.length; i++) {
+            if(fileInfo.data.type == files[i]) {
+                document.getElementById(files[i] + "_progress").style.display = "block";
+                document.getElementById(files[i] + "_progress").children[0].style.width = "0%";
             }
         }
     });
@@ -185,9 +185,9 @@ window.onload = function() {
 
         var checks = document.getElementById("verbosity-wrap").querySelectorAll("input[type=checkbox]");
 
-        for(var e in checks) {
-            if(e.checked)
-                data.verbosity += e.id + ",";
+        for(var i = 0; i < checks.length; i++) {
+            if(checks[i].checked)
+                data.verbosity += checks[i].id + ",";
         }
 
         if(data.verbosity)
