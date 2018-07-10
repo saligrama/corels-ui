@@ -311,7 +311,7 @@ window.onload = function() {
 
     document.getElementById("quickrun").onclick = function(e) {
         e.preventDefault();
-        
+
         var pos = getPosition(document.getElementById("console")).y - 100;
 
         console.log(pos);
@@ -394,6 +394,9 @@ window.onload = function() {
 
     document.getElementById("clear").onclick = function(e) {
         e.preventDefault();
+
+        if(running)
+            return;
 
         var cons = document.getElementById("console");
         cons.scrollTop = 0;
