@@ -79,16 +79,13 @@
     padding: 10px;
     border-radius: 3px;
     background-color: #eee;
-    display: block;
+    display: none;
     width: 100%;
 }
 #quickrun {
     text-align: center;
     margin-bottom: 15px;
     font-size: 18px;
-}
-#csv {
-    display: none;
 }
 .progress-bar {
     height: 100%;
@@ -539,7 +536,7 @@ window.onload = function() {
                                                 <label for="csv">Sample data (extension ".csv")</label>
                                                 <input type="file" id="csv" name="csv" class="form-control">
                                                 <div id="using-default">Using default dataset (COMPAS)</div>
-                                                <a href="#" id="default">Upload dataset</a>
+                                                <a href="#" id="default">Use default dataset (COMPAS)</a>
                                             </div>
                                             <div class="progress" id="csv_progress">
                                                 <div class="progress-bar" role="progressbar"></div>
