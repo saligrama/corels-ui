@@ -120,19 +120,19 @@ window.onload = function() {
         var percent = Math.round(100 * fileInfo.sent / fileInfo.size);
         percent = percent.toString() + "%";
 
-        files.forEach(function(e) {
+        for(var e in files) {
             if(fileInfo.data.type == e)
                 document.getElementById(e + "_progress").children[0].style.width = percent;
-        });
+        }
     });
 
     function reset() {
         if(!running)
             return;
 
-        files.forEach(function(e) {
+        for(var e in files) {
             document.getElementById(e + "_progress").style.display = "none";
-        });
+        }
         running = false;
 
         var curr = uploader.getUploadInfo()
@@ -149,25 +149,25 @@ window.onload = function() {
     uploader.on("error", reset);
 
     uploader.on("complete", function(fileInfo) {
-        files.forEach(function(e) {
+        for(var e in files) {
             if(fileInfo.data.type == e)
                 document.getElementById(e + "_progress").style.display = "none";
-        });
+        }
     });
     
     uploader.on("start", function(fileInfo) {
-        files.forEach(function(e) {
+        for(var e in files) {
             if(fileInfo.data.type == e) {
                 document.getElementById(e + "_progress").style.display = "block";
                 document.getElementById(e + "_progress").children[0].style.width = "0%";
             }
-        });
+        }
     });
 
     socket.on("console", function(data) {
         var cons = document.getElementById("console");
         cons.children[0].innerHTML += data.replace(/\n/g, "<br \>");
-        cons.scrollBy(0, 1000000);
+        cons.scrollTop += 1000000;
     });
 
     socket.on("done-run", function() {
@@ -185,10 +185,10 @@ window.onload = function() {
 
         var checks = document.getElementById("verbosity-wrap").querySelectorAll("input[type=checkbox]");
 
-        checks.forEach(function(e) {
+        for(var e in checks) {
             if(e.checked)
                 data.verbosity += e.id + ",";
-        });
+        }
 
         if(data.verbosity)
             data.verbosity = data.verbosity.slice(0, -1);
