@@ -112,8 +112,8 @@ function m_alert(e, mes) {
 }
 
 window.onload = function() {
-    var socket = io.connect("https://corels.eecs.harvard.edu/");
-    //var socket = io.connect("localhost:8080/");
+    //var socket = io.connect("https://corels.eecs.harvard.edu/");
+    var socket = io.connect("localhost:8080/");
     var uploader = new SocketIOFileClient(socket);
 
     var running = false;
@@ -562,7 +562,7 @@ window.onload = function() {
                                             <br>
                                             <div class="row">
                                                 <label for="max_card">Maximum cardinality</label>
-                                                <input type="number" value="2" step="1" min="1" id="max_card" name="max_card" class="form-control">
+                                                <input type="number" value="1" step="1" min="1" id="max_card" name="max_card" class="form-control">
                                             </div>
                                         </div>
                                         <div class="col-12" id="csv_alert_wrap">
@@ -588,7 +588,7 @@ window.onload = function() {
                                             <br>
                                             <div class="row">
                                                 <label for="max_nodes">Max number of nodes</label>
-                                                <input type="number" min=10000 id="max_nodes" name="max_nodes" class="form-control" value=1000000 required/>
+                                                <input type="number" id="max_nodes" name="max_nodes" class="form-control" value=100000000 required/>
                                             </div>
                                             <br>
                                             <div class="row">
