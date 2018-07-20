@@ -3,6 +3,8 @@ var spawn = require('child_process').spawn;
 var exec = require('child_process').exec;
 
 var fs = require('fs');
+var readline = require('readline');
+var firstline = require('firstline');
 
 // external libraries
 var express = require('express');
@@ -91,39 +93,54 @@ io.on('connection', function(socket) {
     var args = [];
     var command = __dirname + "/../bbcache/src/corels";
 
-    args.push("-r " + params.regularization);
-    args.push("-n " + params.max_nodes);
-    args.push("-v " + params.verbosity);
-    args.push(params.search_policy);
-    args.push(params.prefix_map);
-    args.push("\"" + out_path + "\"");
-    args.push("\"" + label_path + "\"");
-    if(minor_path)
-      args.push("\"" + minor_path + "\"");
+    //var rl = readline.createInterface({ input: fs.createReadStream(label_path) });
+    var promise = firstline(label_path);
 
-    socket.emit('console', '\nRunning corels\n');
-    corels_process = spawn(command, args, { shell: true, env: { "LD_LIBRARY_PATH": "/usr/local/lib:/usr/lib:/usr/local/lib64:/usr/lib64" } });
+    promise.then(function(line) {
+      reg = params.regularization;
+      n = (line.length - 9) / 2;
+      f = 0.99;
+      if(reg < (f / n))
+        reg = f / n;
 
-    var count = 1;
+      console.log("n: " + n + "  r: " + reg);
+      
+      args.push("-r " + reg);
+      args.push("-n " + params.max_nodes);
+      args.push("-v " + params.verbosity);
+      args.push(params.search_policy);
+      args.push(params.prefix_map);
+      args.push("\"" + out_path + "\"");
+      args.push("\"" + label_path + "\"");
+      if(minor_path)
+        args.push("\"" + minor_path + "\"");
 
-    var interval = setInterval(function() {
-      socket.emit('console', (count++ * 10) + ' seconds elapsed\n');
-    }, 10000);
+      socket.emit('console', '\nRunning corels\n');
+      corels_process = spawn(command, args, { shell: true, env: { "LD_LIBRARY_PATH": "/usr/local/lib:/usr/lib:/usr/local/lib64:/usr/lib64" } });
 
-    corels_process.on('close', function() {
-      clearInterval(interval);
-      corels_process = null;
-      exec("rm -rf \"" + out_path + "\" \"" + label_path + "\" \"" + minor_path + "\"", {}, function(err, stdout, stderr) {
-        if(err) console.log(err);
+      var count = 1;
+
+      var interval = setInterval(function() {
+        socket.emit('console', (count++ * 10) + ' seconds elapsed\n');
+      }, 10000);
+
+      corels_process.on('close', function() {
+        clearInterval(interval);
+        corels_process = null;
+        exec("rm -rf \"" + out_path + "\" \"" + label_path + "\" \"" + minor_path + "\"", {}, function(err, stdout, stderr) {
+          if(err) console.log(err);
+        });
+
+        end();
+      });
+      corels_process.stderr.on('data', function(data) {
+        socket.emit('console', data.toString());
+      });
+      corels_process.stdout.on('data', function(data) {
+        socket.emit('console', data.toString());
       });
 
-      end();
-    });
-    corels_process.stderr.on('data', function(data) {
-      socket.emit('console', data.toString());
-    });
-    corels_process.stdout.on('data', function(data) {
-      socket.emit('console', data.toString());
+      return true;
     });
   }
 

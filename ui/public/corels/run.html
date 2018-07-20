@@ -112,8 +112,8 @@ function m_alert(e, mes) {
 }
 
 window.onload = function() {
-    var socket = io.connect("https://corels.eecs.harvard.edu/");
-    //var socket = io.connect("localhost:8080/");
+    //var socket = io.connect("https://corels.eecs.harvard.edu/");
+    var socket = io.connect("localhost:8080/");
     var uploader = new SocketIOFileClient(socket);
 
     var running = false;
