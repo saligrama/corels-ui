@@ -98,12 +98,17 @@ io.on('connection', function(socket) {
 
     promise.then(function(line) {
       reg = params.regularization;
-      n = (line.length - 9) / 2;
-      f = 0.99;
-      if(reg < (f / n))
-        reg = f / n;
+      samples = line.substr(9)
+      ones = samples.split("1").length - 1
+      zeros = samples.split("0").length - 1
+      n = ones + zeros;
+      if(reg < (1.0 / n))
+        reg = 1.0 / n;
 
-      console.log("n: " + n + "  r: " + reg);
+      if(reg > (Math.min(ones, zeros) / n))
+        reg = Math.min(ones, zeros) / n
+
+      console.log("1s: " + ones + "  0s: " + zeros + "  r: " + reg);
       
       args.push("-r " + reg);
       args.push("-n " + params.max_nodes);
