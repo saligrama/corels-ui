@@ -1,6 +1,10 @@
 # CORELS UI
 Web user interface for nlarusstone/corels using NodeJS and Express. Now live at https://corels.eecs.harvard.edu !
 
+# Screenshots
+![Home page](https://github.com/saligrama/corels-ui/raw/master/home.png "Home page")
+![Run It! page](https://github.com/saligrama/corels-ui/raw/master/run.png "Run It! page")
+
 Requires NodeJS libraries `express`, `multer`, `body-parser`, and `string`.
 
 # Installation
