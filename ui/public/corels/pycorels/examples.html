@@ -38,8 +38,20 @@
             
   <div class="section" id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="simple-dataset">
-<h2>Simple Dataset<a class="headerlink" href="#simple-dataset" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="toy-dataset">
+<h2>Toy Dataset<a class="headerlink" href="#toy-dataset" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">corels</span> <span class="k">import</span> <span class="n">CorelsClassifier</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="p">])</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">CorelsClassifier</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="p">[])</span>
+<span class="n">c</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">printrl</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="compas-dataset">
+<h2>COMPAS Dataset<a class="headerlink" href="#compas-dataset" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">corels</span> <span class="k">import</span> <span class="o">*</span>
 
 <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_from_csv</span><span class="p">(</span><span class="s2">&quot;data/compas.csv&quot;</span><span class="p">)</span>
@@ -49,6 +61,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>The data file used in this example can be <a class="reference external" href="https://raw.githubusercontent.com/fingoldin/pycorels/master/tests/data/compas.csv">found here</a>.</p>
 </div>
 </div>
 
@@ -61,7 +74,8 @@
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Examples</a><ul>
-<li><a class="reference internal" href="#simple-dataset">Simple Dataset</a></li>
+<li><a class="reference internal" href="#toy-dataset">Toy Dataset</a></li>
+<li><a class="reference internal" href="#compas-dataset">COMPAS Dataset</a></li>
 </ul>
 </li>
 </ul>
