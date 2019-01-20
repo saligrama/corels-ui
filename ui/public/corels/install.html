@@ -41,9 +41,6 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="/corels/install.html">Install</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/corels/examples.html">Code Examples</a>
-                    </li>
                 </ul>
             </div>
             <div class="col-12 col-sm-9 border-left" style="margin-bottom:40px">
@@ -72,23 +69,21 @@
                     <h2>Python</h2>
                     <br>
                     <p>
-                        A python wrapper of CORELS, called pycorels, is also available. To install, first download the repository containing the python binding, which can be found at <a href="https://github.com/fingoldin/corels">https://github.com/fingoldin/corels</a>:
+                        We provide a python binding for CORELS. To instal it on Linux, simply run:
                     </p>
-                    <pre><code>git clone https://github.com/fingoldin/corels.git</code></pre>
+                    <pre><code>pip install corels</code></pre>
                     <p>
-                        Then, run <code>make libcorels.so</code> from the <code>src/</code> directory of the above repo.
+                        The code for the python binding can be found at: <a href="https://github.com/fingoldin/pycorels">https://github.com/fingoldin/pycorels</a>
                         <br>
+                        In order to use the Python binding, you must have gmp, mpfr, and libmpc installed as described above in the CLI section.
                         <br>
-                        Then, copy <code>libcorels.so</code> to a location on your linker path, such as <code>/usr/local/lib</code> on Linux.
-                        <br>
-                        <br>
-                        Finally, run <code>python setup.py install</code> from the <code>pycorels/</code> directory. You might have to use sudo for this. Once done, you should be able to <code>import pycorels</code> from within python.
+                        Documentation for the python binding is <a href="/corels/pycorels/">is hosted here</a>.
                     </p>
                     <br>
                     <h2>R</h2>
                     <br>
                     <p>
-                        R binding coming soon!
+                        We also provide an R binding, found here: <a href="https://github.com/saligrama/rcorels">https://github.com/saligrama/rcorels</a>. Instructions for downloading it are found at that link.
                     </p>
                     <br>
                     <p>

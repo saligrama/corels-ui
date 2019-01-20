@@ -1,0 +1,7 @@
+corels
+======
+
+.. toctree::
+   :maxdepth: 4
+
+   corels
