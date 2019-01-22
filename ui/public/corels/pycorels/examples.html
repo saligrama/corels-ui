@@ -54,10 +54,10 @@
 <h2>COMPAS Dataset<a class="headerlink" href="#compas-dataset" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">corels</span> <span class="k">import</span> <span class="o">*</span>
 
-<span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_from_csv</span><span class="p">(</span><span class="s2">&quot;data/compas.csv&quot;</span><span class="p">)</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">features</span> <span class="o">=</span> <span class="n">load_from_csv</span><span class="p">(</span><span class="s2">&quot;data/compas.csv&quot;</span><span class="p">)</span>
 <span class="n">c</span> <span class="o">=</span> <span class="n">CorelsClassifier</span><span class="p">(</span><span class="n">n_iter</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
 
-<span class="n">a</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 <span class="n">c</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">)</span>
 <span class="n">c</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="c1"># same as c.printrl(), or print(c.rl_)</span>
