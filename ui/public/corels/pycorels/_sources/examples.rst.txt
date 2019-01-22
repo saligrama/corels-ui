@@ -23,6 +23,8 @@ COMPAS Dataset
     c = CorelsClassifier(n_iter=10000)
 
     a = c.fit(X, y).score(X, y)
-    print(a)
+    c.save("model")
+    c.load("model")
+    print(c) # same as c.printrl(), or print(c.rl_)
 
 The data file used in this example can be `found here <https://raw.githubusercontent.com/fingoldin/pycorels/master/tests/data/compas.csv>`_.
