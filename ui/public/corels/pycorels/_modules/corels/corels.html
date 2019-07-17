@@ -35,7 +35,7 @@
             
   <h1>Source code for corels.corels</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">with_statement</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_corels</span>
+<span class="kn">from</span> <span class="nn">._corels</span> <span class="k">import</span> <span class="n">fit_wrap_begin</span><span class="p">,</span> <span class="n">fit_wrap_end</span><span class="p">,</span> <span class="n">fit_wrap_loop</span><span class="p">,</span> <span class="n">predict_wrap</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">check_consistent_length</span><span class="p">,</span> <span class="n">check_array</span><span class="p">,</span> <span class="n">check_is_fitted</span><span class="p">,</span> <span class="n">get_feature</span><span class="p">,</span> <span class="n">check_in</span><span class="p">,</span> <span class="n">check_features</span><span class="p">,</span> <span class="n">check_rulelist</span><span class="p">,</span> <span class="n">RuleList</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
@@ -78,14 +78,17 @@
 
 <span class="sd">    verbosity : list, optional (default=[&quot;progress&quot;])</span>
 <span class="sd">        The verbosity levels required. A list of strings, it can contain any</span>
-<span class="sd">        subset of [&quot;rule&quot;, &quot;label&quot;, &quot;samples&quot;, &quot;progress&quot;, &quot;log&quot;, &quot;loud&quot;].</span>
-<span class="sd">        - &quot;rule&quot; prints the a summary for each rule generated.</span>
+<span class="sd">        subset of [&quot;rule&quot;, &quot;label&quot;, &quot;minor&quot;, &quot;samples&quot;, &quot;progress&quot;, &quot;mine&quot;, &quot;loud&quot;].</span>
+<span class="sd">        - &quot;rule&quot; prints a summary of each rule generated.</span>
 <span class="sd">        - &quot;label&quot; prints a summary of the class labels.</span>
-<span class="sd">        - &quot;samples&quot; produces a complete dump of the rules and/or label </span>
-<span class="sd">            data. &quot;rule&quot; being or &quot;label&quot; must also be already provided.</span>
+<span class="sd">        - &quot;minor&quot; prints a summary of the minority bound.</span>
+<span class="sd">        - &quot;samples&quot; produces a complete dump of the rules, label, and/or minor</span>
+<span class="sd">            data. You must also provide at least one of &quot;rule&quot;, &quot;label&quot;, or &quot;minor&quot;</span>
+<span class="sd">            to specify which data you want to dump, or &quot;loud&quot; for all data. The &quot;samples&quot;</span>
+<span class="sd">            option often spits out a lot of output.</span>
 <span class="sd">        - &quot;progress&quot; prints periodic messages as corels runs.</span>
-<span class="sd">        - &quot;log&quot; prints machine information.</span>
-<span class="sd">        - &quot;loud&quot; is the equivalent of [&quot;progress&quot;, &quot;log&quot;, &quot;label&quot;, &quot;rule&quot;]</span>
+<span class="sd">        - &quot;mine&quot; prints debug information while mining rules, including each rule as it is generated.</span>
+<span class="sd">        - &quot;loud&quot; is the equivalent of [&quot;progress&quot;, &quot;label&quot;, &quot;rule&quot;, &quot;mine&quot;, &quot;minor&quot;].</span>
 
 <span class="sd">    ablation : int, optional (default=0)</span>
 <span class="sd">        Specifies addition parameters for the bounds used while searching. Accepted</span>
@@ -100,7 +103,7 @@
 <span class="sd">    min_support : float, optional (default=0.01)</span>
 <span class="sd">        The fraction of samples that a rule must capture in order to be used. 1 minus</span>
 <span class="sd">        this value is also the maximum fraction of samples a rule can capture.</span>
-<span class="sd">        Can be any value between 0.0 and 1.0.</span>
+<span class="sd">        Can be any value between 0.0 and 0.5.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -121,6 +124,8 @@
 <span class="sd">    [ True False  True ]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
+    <span class="n">_estimator_type</span> <span class="o">=</span> <span class="s2">&quot;classifier&quot;</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">map_type</span><span class="o">=</span><span class="s2">&quot;prefix&quot;</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="s2">&quot;lower_bound&quot;</span><span class="p">,</span>
                  <span class="n">verbosity</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;progress&quot;</span><span class="p">],</span> <span class="n">ablation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_card</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">min_support</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span>
@@ -157,39 +162,46 @@
 <span class="sd">        -------</span>
 <span class="sd">        self : obj</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Regularization constant (c) must be a float between&quot;</span>
-                             <span class="s2">&quot; 0.0 and 1.0, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">))</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Max nodes must be a positive integer, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">))</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ablation</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ablation</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ablation</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Ablation must be an integer between 0 and 2&quot;</span>
-                             <span class="s2">&quot;, inclusive, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ablation</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Regularization constant (c) must be a float, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Regularization constant (c) must be between 0.0 and 1.0, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Max nodes must be an integer, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Max nodes must be positive, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ablation</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Ablation must be an integer, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ablation</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ablation</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ablation</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Ablation must be between 0 and 2, inclusive, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ablation</span><span class="p">))</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">map_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Map type must be a string, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">map_type</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Map type must be a string, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">map_type</span><span class="p">)))</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Policy must be a string, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Policy must be a string, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="p">)))</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Verbosity must be a list of strings, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">))</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_support</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_support</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_support</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minimum support must be a float between&quot;</span>
-                             <span class="s2">&quot; 0.0 and 1.0, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_support</span><span class="p">))</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_card</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_card</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Max cardinality must be an integer greater than or equal to 1&quot;</span>
-                             <span class="s2">&quot;, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_card</span><span class="p">))</span>
-        
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Verbosity must be a list of strings, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_support</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Minimum support must be a float, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_support</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_support</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_support</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minimum support must be between 0.0 and 0.5, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_support</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_card</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Max cardinality must be an integer, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_card</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_card</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Max cardinality must be greater than or equal to 1, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_card</span><span class="p">))</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prediction_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Prediction name must be a string, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">prediction_name</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Prediction name must be a string, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">prediction_name</span><span class="p">)))</span>
        
-        <span class="n">check_consistent_length</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-        <span class="n">label</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">label</span><span class="p">),</span> <span class="n">label</span> <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-        
-        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">label</span><span class="p">),</span> <span class="n">label</span> <span class="p">])</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">check_consistent_length</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 
         <span class="n">n_samples</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">n_features</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_card</span> <span class="o">&gt;</span> <span class="n">n_features</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Max cardinality (&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_card</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;) cannot be greater&quot;</span>
+                             <span class="s2">&quot; than the number of features (&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">n_features</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span><span class="p">)</span>
+
         <span class="n">n_labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         
         <span class="n">rl</span> <span class="o">=</span> <span class="n">RuleList</span><span class="p">()</span>
@@ -198,7 +210,7 @@
             <span class="n">check_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
             <span class="n">rl</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">rl</span><span class="o">.</span><span class="n">features_</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">rl</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_features</span><span class="p">):</span>
                 <span class="n">rl</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;feature&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
 
@@ -208,23 +220,29 @@
         
         <span class="n">rl</span><span class="o">.</span><span class="n">prediction_name</span> <span class="o">=</span> <span class="n">prediction_name</span>
 
-        <span class="n">allowed_verbosities</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;rule&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;samples&quot;</span><span class="p">,</span> <span class="s2">&quot;progress&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;loud&quot;</span><span class="p">]</span>
+        <span class="n">allowed_verbosities</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;rule&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;samples&quot;</span><span class="p">,</span> <span class="s2">&quot;progress&quot;</span><span class="p">,</span> <span class="s2">&quot;loud&quot;</span><span class="p">,</span> <span class="s2">&quot;mine&quot;</span><span class="p">,</span> <span class="s2">&quot;minor&quot;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Verbosity flags must be strings, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Verbosity flags must be strings, got: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
 
             <span class="n">check_in</span><span class="p">(</span><span class="s2">&quot;Verbosities&quot;</span><span class="p">,</span> <span class="n">allowed_verbosities</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="s2">&quot;samples&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> \
               <span class="ow">and</span> <span class="s2">&quot;rule&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> \
-              <span class="ow">and</span> <span class="s2">&quot;label&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">:</span>
+              <span class="ow">and</span> <span class="s2">&quot;label&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> \
+              <span class="ow">and</span> <span class="s2">&quot;minor&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> \
+              <span class="ow">and</span> <span class="s2">&quot;loud&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;samples&#39; verbosity option must be combined with at&quot;</span> <span class="o">+</span> 
-                             <span class="s2">&quot; least one of &#39;rule&#39; or &#39;label&#39;&quot;</span><span class="p">)</span>
+                             <span class="s2">&quot; least one of &#39;rule&#39;, &#39;label&#39;, &#39;minor&#39;, or &#39;loud&#39;&quot;</span><span class="p">)</span>
 
         <span class="c1"># Verbosity for rule mining and minority bound. 0 is quiet, 1 is verbose</span>
-        <span class="n">m_verbose</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">mine_verbose</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="s2">&quot;loud&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="ow">or</span> <span class="s2">&quot;mine&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">:</span>
-            <span class="n">m_verbose</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">mine_verbose</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        <span class="n">minor_verbose</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="s2">&quot;loud&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="ow">or</span> <span class="s2">&quot;minor&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">:</span>
+            <span class="n">minor_verbose</span> <span class="o">=</span> <span class="mi">1</span>
         
         <span class="n">verbose</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
 
@@ -237,25 +255,27 @@
         <span class="n">map_id</span> <span class="o">=</span> <span class="n">map_types</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">map_type</span><span class="p">)</span>
         <span class="n">policy_id</span> <span class="o">=</span> <span class="n">policies</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="p">)</span>
 
-        <span class="n">fr</span> <span class="o">=</span> <span class="n">_corels</span><span class="o">.</span><span class="n">fit_wrap_begin</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">rl</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
-                             <span class="bp">self</span><span class="o">.</span><span class="n">max_card</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_support</span><span class="p">,</span> <span class="n">verbose</span><span class="p">,</span> <span class="n">m_verbose</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">policy_id</span><span class="p">,</span>
-                             <span class="n">map_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ablation</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">fr</span> <span class="o">=</span> <span class="n">fit_wrap_begin</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                             <span class="n">labels</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">rl</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">max_card</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_support</span><span class="p">,</span> <span class="n">verbose</span><span class="p">,</span> <span class="n">mine_verbose</span><span class="p">,</span> <span class="n">minor_verbose</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">policy_id</span><span class="p">,</span> <span class="n">map_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ablation</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         
-        <span class="n">acc</span> <span class="o">=</span> <span class="mf">0.0</span>
-
         <span class="k">if</span> <span class="n">fr</span><span class="p">:</span>
             <span class="n">early</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="k">while</span> <span class="n">_corels</span><span class="o">.</span><span class="n">fit_wrap_loop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">):</span>
+                <span class="k">while</span> <span class="n">fit_wrap_loop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">):</span>
                     <span class="k">pass</span>
-            <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="k">except</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Exiting early&quot;</span><span class="p">)</span>
-                <span class="n">early</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">rl</span><span class="o">.</span><span class="n">rules</span> <span class="o">=</span> <span class="n">fit_wrap_end</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span> <span class="o">=</span> <span class="n">rl</span>
+
+                <span class="k">raise</span>
              
-            <span class="n">rl</span><span class="o">.</span><span class="n">rules</span> <span class="o">=</span> <span class="n">_corels</span><span class="o">.</span><span class="n">fit_wrap_end</span><span class="p">(</span><span class="n">early</span><span class="p">)</span>
+            <span class="n">rl</span><span class="o">.</span><span class="n">rules</span> <span class="o">=</span> <span class="n">fit_wrap_end</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
             
             <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span> <span class="o">=</span> <span class="n">rl</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">is_fitted_</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error running model! Exiting&quot;</span><span class="p">)</span>
 
@@ -278,16 +298,16 @@
 <span class="sd">            The classifications of the input samples.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;is_fitted_&quot;</span><span class="p">)</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;rl_&quot;</span><span class="p">)</span>
         <span class="n">check_rulelist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="p">)</span>        
 
-        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="o">.</span><span class="n">features</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Feature count mismatch between eval data (&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> 
                              <span class="s2">&quot;) and feature names (&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="o">.</span><span class="n">features</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">_corels</span><span class="o">.</span><span class="n">predict_wrap</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="o">.</span><span class="n">rules</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">predict_wrap</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="o">.</span><span class="n">rules</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="CorelsClassifier.score"><a class="viewcode-back" href="../../CorelsClassifier.html#corels.CorelsClassifier.score">[docs]</a>    <span class="k">def</span> <span class="nf">score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -309,88 +329,146 @@
 <span class="sd">            The accuracy, from 0.0 to 1.0, of the rulelist predictions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">check_consistent_length</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
-       
-        <span class="n">p</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">X</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input samples must have only 1 or 2 dimensions, got &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span> <span class="o">+</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">check_consistent_length</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">p</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input samples must have only 1 or 2 dimensions, got &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span> <span class="o">+</span>
                              <span class="s2">&quot; dimensions&quot;</span><span class="p">)</span>
 
-        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_xor</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">labels</span><span class="p">)))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_xor</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">labels</span><span class="p">)))</span>
 
         <span class="k">return</span> <span class="n">a</span></div>
-    
+
+<div class="viewcode-block" id="CorelsClassifier.get_params"><a class="viewcode-back" href="../../CorelsClassifier.html#corels.CorelsClassifier.get_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a list of all the model&#39;s parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        params : dict</span>
+<span class="sd">            Dictionary of all parameters, with the names of the parameters as the keys</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span>
+            <span class="s2">&quot;n_iter&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">,</span>
+            <span class="s2">&quot;map_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_type</span><span class="p">,</span>
+            <span class="s2">&quot;policy&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="p">,</span>
+            <span class="s2">&quot;verbosity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">,</span>
+            <span class="s2">&quot;ablation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ablation</span><span class="p">,</span>
+            <span class="s2">&quot;max_card&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_card</span><span class="p">,</span>
+            <span class="s2">&quot;min_support&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_support</span>
+        <span class="p">}</span></div>
+
+<div class="viewcode-block" id="CorelsClassifier.set_params"><a class="viewcode-back" href="../../CorelsClassifier.html#corels.CorelsClassifier.set_params">[docs]</a>    <span class="k">def</span> <span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set model parameters. Takes an arbitrary number of keyword parameters, all of which</span>
+<span class="sd">        must be valid parameter names (i.e. must be included in those returned by get_params).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : obj</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">valid_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_params</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid parameter &#39;&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&#39; given in set_params. &quot;</span>
+                                 <span class="s2">&quot;Check the list of valid parameters with get_params()&quot;</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
 <div class="viewcode-block" id="CorelsClassifier.save"><a class="viewcode-back" href="../../CorelsClassifier.html#corels.CorelsClassifier.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Save the rulelist to a file, using python&#39;s pickle module.</span>
+<span class="sd">        Save the model to a file, using python&#39;s pickle module.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        fname : string</span>
-<span class="sd">            File name to store the rulelist in</span>
+<span class="sd">            File name to store the model in</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        self : obj</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;is_fitted_&quot;</span><span class="p">)</span>
-        <span class="n">check_rulelist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="p">)</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">({</span> <span class="s2">&quot;f&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="o">.</span><span class="n">rules</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="o">.</span><span class="n">prediction_name</span> <span class="p">},</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="CorelsClassifier.load"><a class="viewcode-back" href="../../CorelsClassifier.html#corels.CorelsClassifier.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load a rulelist from a file, using python&#39;s pickle module.</span>
+<span class="sd">        Load a model from a file, using python&#39;s pickle module.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        fname : string</span>
-<span class="sd">            File name to load the rulelist from</span>
+<span class="sd">            File name to load the model from</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        self : obj</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">rl_dict</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;r&quot;</span> <span class="ow">in</span> <span class="n">rl_dict</span> <span class="ow">or</span> <span class="ow">not</span> <span class="s2">&quot;f&quot;</span> <span class="ow">in</span> <span class="n">rl_dict</span> <span class="ow">or</span> <span class="ow">not</span> <span class="s2">&quot;p&quot;</span> <span class="ow">in</span> <span class="n">rl_dict</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid rulelist file&quot;</span><span class="p">)</span>
-            
-            <span class="n">rl</span> <span class="o">=</span> <span class="n">RuleList</span><span class="p">()</span>
-            <span class="n">rl</span><span class="o">.</span><span class="n">rules</span> <span class="o">=</span> <span class="n">rl_dict</span><span class="p">[</span><span class="s2">&quot;r&quot;</span><span class="p">]</span>
-            <span class="n">rl</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">rl_dict</span><span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">]</span>
-            <span class="n">rl</span><span class="o">.</span><span class="n">prediction_name</span> <span class="o">=</span> <span class="n">rl_dict</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
-            <span class="n">check_rulelist</span><span class="p">(</span><span class="n">rl</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+           
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;get_params&quot;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid model provided, model must have get_params() method&quot;</span><span class="p">)</span>
+                
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">model</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span> <span class="o">=</span> <span class="n">rl</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">is_fitted_</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;rl_&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">rl_</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="CorelsClassifier.printrl"><a class="viewcode-back" href="../../CorelsClassifier.html#corels.CorelsClassifier.printrl">[docs]</a>    <span class="k">def</span> <span class="nf">printrl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CorelsClassifier.rl"><a class="viewcode-back" href="../../CorelsClassifier.html#corels.CorelsClassifier.rl">[docs]</a>    <span class="k">def</span> <span class="nf">rl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">set_val</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Print the rulelist in a human-friendly format.</span>
+<span class="sd">        Return or set the learned rulelist</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        set_val : RuleList, optional</span>
+<span class="sd">            Rulelist to set the model to</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        self : obj</span>
+<span class="sd">        rl : obj</span>
+<span class="sd">            The model&#39;s rulelist</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
+        <span class="k">if</span> <span class="n">set_val</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">check_rulelist</span><span class="p">(</span><span class="n">set_val</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span> <span class="o">=</span> <span class="n">set_val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;rl_&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span></div>
     
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;is_fitted_&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;CorelsClassifier (&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
 
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;rl_&quot;</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">s</span>
+    
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;CorelsClassifier (&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;rl_&quot;</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl_</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">s</span></div>
 </pre></div>
 
           </div>
