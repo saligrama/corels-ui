@@ -40,6 +40,17 @@
 <h1>CORELS: Certifiably Optimal RulE ListS<a class="headerlink" href="#corels-certifiably-optimal-rule-lists" title="Permalink to this headline">¶</a></h1>
 <p>Welcome to the documentation of the Python binding of CORELS!
 All functionality is exposed via a class named ‘CorelsClassifier’. In addition, a couple helper functions are provided. Lastly, we provide some examples in the ‘examples’ section.</p>
+<div class="section" id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>::</dt>
+<dd><p class="first">from corels import *</p>
+<p>X, y = load_from_csv(“compas.csv”)</p>
+<p class="last">a = CorelsClassifier().fit(X, y).score(X, y)
+print(“Accuracy = ” + str(a))</p>
+</dd>
+</dl>
+<p>Head over to the <a class="reference external" href="examples.html">examples page</a> for more code samples.</p>
 <p>For installation instructions and more information on the code, visit <a class="reference external" href="https://github.com/fingoldin/pycorels">https://github.com/fingoldin/pycorels</a>.</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -48,9 +59,12 @@ All functionality is exposed via a class named ‘CorelsClassifier’. In additi
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#toy-dataset">Toy Dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#compas-dataset">COMPAS Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#scikit-learn">Scikit-learn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#microsoft-interpret">Microsoft interpret</a></li>
 </ul>
 </li>
 </ul>
+</div>
 </div>
 </div>
 
@@ -60,6 +74,14 @@ All functionality is exposed via a class named ‘CorelsClassifier’. In additi
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">CORELS: Certifiably Optimal RulE ListS</a><ul>
+<li><a class="reference internal" href="#quick-start">Quick Start</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Next topic</h4>
   <p class="topless"><a href="CorelsClassifier.html"
                         title="next chapter">CorelsClassifier</a></p>
