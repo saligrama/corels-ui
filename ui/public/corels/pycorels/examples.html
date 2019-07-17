@@ -39,7 +39,7 @@
   <div class="section" id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
 <p>Many of these examples make use of the COMPAS dataset, which <a class="reference external" href="https://raw.githubusercontent.com/fingoldin/pycorels/master/tests/data/compas.csv">can be found here</a>.
-Its data is stored with one command-separated-row per sample, each with 26 binary features, and 1 classification (the 27th column). The first row specifies the feature names.</p>
+Its data is stored with one comma-separated-row per sample, each with 26 binary features, and 1 classification (the 27th column). The first row specifies the feature names.</p>
 <div class="section" id="toy-dataset">
 <h2>Toy Dataset<a class="headerlink" href="#toy-dataset" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">corels</span> <span class="kn">import</span> <span class="n">CorelsClassifier</span>
@@ -146,35 +146,6 @@ Its data is stored with one command-separated-row per sample, each with 26 binar
 </pre></div>
 </div>
 </div>
-<div class="section" id="microsoft-interpret">
-<h2>Microsoft interpret<a class="headerlink" href="#microsoft-interpret" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example integration of corels with Microsoft&#39;s interpret package (https://github.com/microsoft/interpret)</span>
-
-<span class="kn">from</span> <span class="nn">corels</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">interpret</span> <span class="kn">import</span> <span class="n">show</span>
-<span class="kn">from</span> <span class="nn">interpret.blackbox</span> <span class="kn">import</span> <span class="n">LimeTabular</span>
-<span class="kn">from</span> <span class="nn">interpret.perf</span> <span class="kn">import</span> <span class="n">ROC</span>
-<span class="kn">import</span> <span class="nn">time</span>
-
-<span class="c1"># Load the compas dataset</span>
-<span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">features</span> <span class="o">=</span> <span class="n">load_from_csv</span><span class="p">(</span><span class="s2">&quot;data/compas.csv&quot;</span><span class="p">)</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">CorelsClassifier</span><span class="p">(</span><span class="n">n_iter</span><span class="o">=</span><span class="mi">100000</span><span class="p">)</span>
-
-<span class="c1"># Fit the model. Features is a list of the feature names</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<span class="c1"># Print the rulelist</span>
-<span class="k">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">rl</span><span class="p">())</span>
-
-<span class="c1"># Explain the model&#39;s behavior on the first sample. Copy-paste the outputted URL</span>
-<span class="c1"># into your browser to view the visualization.</span>
-<span class="n">lime</span> <span class="o">=</span> <span class="n">LimeTabular</span><span class="p">(</span><span class="n">predict_fn</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">predict</span><span class="p">,</span> <span class="n">feature_names</span><span class="o">=</span><span class="n">features</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
-
-<span class="n">show</span><span class="p">(</span><span class="n">lime</span><span class="p">)</span>
-
-<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
 </div>
 
 
@@ -189,7 +160,6 @@ Its data is stored with one command-separated-row per sample, each with 26 binar
 <li><a class="reference internal" href="#toy-dataset">Toy Dataset</a></li>
 <li><a class="reference internal" href="#compas-dataset">COMPAS Dataset</a></li>
 <li><a class="reference internal" href="#scikit-learn">Scikit-learn</a></li>
-<li><a class="reference internal" href="#microsoft-interpret">Microsoft interpret</a></li>
 </ul>
 </li>
 </ul>
