@@ -124,15 +124,17 @@ evaluated at that rulelist; and “dfs” for depth-first search.</p>
 <dt id="corels.CorelsClassifier.verbosity">
 <code class="descname">verbosity</code><a class="headerlink" href="#corels.CorelsClassifier.verbosity" title="Permalink to this definition">¶</a></dt>
 <dd><p>The verbosity levels required. A list of strings, it can contain any
-subset of [“rulelist”, “rule”, “label”, “minor”, “samples”, “progress”, “mine”, “loud”].
-- “rulelist” prints the generated rulelist at the end
-- “rule” prints a summary of each rule generated.
-- “label” prints a summary of the class labels.
-- “minor” prints a summary of the minority bound.
-- “samples” produces a complete dump of the rules, label, and/or minor data. You must also provide at least one of “rule”, “label”, or “minor” to specify which data you want to dump, or “loud” for all data. The “samples” option often spits out a lot of output.
-- “progress” prints periodic messages as corels runs.
-- “mine” prints debug information while mining rules, including each rule as it is generated.
-- “loud” is the equivalent of [“progress”, “label”, “rule”, “mine”, “minor”].</p>
+subset of [“rulelist”, “rule”, “label”, “minor”, “samples”, “progress”, “mine”, “loud”].</p>
+<ul class="simple">
+<li>“rulelist” prints the generated rulelist at the end.</li>
+<li>“rule” prints a summary of each rule generated.</li>
+<li>“label” prints a summary of the class labels.</li>
+<li>“minor” prints a summary of the minority bound.</li>
+<li>“samples” produces a complete dump of the rules, label, and/or minor data. You must also provide at least one of “rule”, “label”, or “minor” to specify which data you want to dump, or “loud” for all data. The “samples” option often spits out a lot of output.</li>
+<li>“progress” prints periodic messages as corels runs.</li>
+<li>“mine” prints debug information while mining rules, including each rule as it is generated.</li>
+<li>“loud” is the equivalent of [“progress”, “label”, “rule”, “mine”, “minor”].</li>
+</ul>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
