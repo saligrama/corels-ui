@@ -40,14 +40,29 @@
 <h1>CORELS: Certifiably Optimal RulE ListS<a class="headerlink" href="#corels-certifiably-optimal-rule-lists" title="Permalink to this headline">¶</a></h1>
 <p>Welcome to the documentation of the Python binding of CORELS!
 All functionality is exposed via a class named ‘CorelsClassifier’. In addition, a couple helper functions are provided. Lastly, we provide some examples in the ‘examples’ section.</p>
-<dl class="docutils">
-<dt>Quick Start::</dt>
-<dd><p class="first">from corels import *</p>
-<p>X, y = load_from_csv(“compas.csv”)</p>
-<p class="last">a = CorelsClassifier().fit(X, y).score(X, y)
-print(“Accuracy = ” + str(a))</p>
-</dd>
-</dl>
+<div class="section" id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">corels</span> <span class="kn">import</span> <span class="n">CorelsClassifier</span>
+
+<span class="c1"># [&quot;loud&quot;, &quot;samples&quot;] is the most verbose setting possible</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">CorelsClassifier</span><span class="p">(</span><span class="n">max_card</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;loud&quot;</span><span class="p">,</span> <span class="s2">&quot;samples&quot;</span><span class="p">])</span>
+
+<span class="c1"># 4 samples, 3 features</span>
+<span class="n">X</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="c1"># Feature names</span>
+<span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Mac User&quot;</span><span class="p">,</span> <span class="s2">&quot;Likes Pie&quot;</span><span class="p">,</span> <span class="s2">&quot;Age &lt; 20&quot;</span><span class="p">]</span>
+
+<span class="c1"># Fit the model</span>
+<span class="n">C</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span> <span class="n">prediction_name</span><span class="o">=</span><span class="s2">&quot;Has a dirty computer&quot;</span><span class="p">)</span>
+
+<span class="c1"># Print the resulting rulelist</span>
+<span class="k">print</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">rl</span><span class="p">())</span>
+
+<span class="c1"># Predict on the training set</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Prediction: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)))</span>
+</pre></div>
+</div>
 <p>Head over to the <a class="reference external" href="examples.html">examples page</a> for more code samples.</p>
 <p>For installation instructions and more information on the code, visit <a class="reference external" href="https://github.com/fingoldin/pycorels">https://github.com/fingoldin/pycorels</a>.</p>
 <div class="toctree-wrapper compound">
@@ -63,6 +78,7 @@ print(“Accuracy = ” + str(a))</p>
 </ul>
 </div>
 </div>
+</div>
 
 
           </div>
@@ -70,6 +86,14 @@ print(“Accuracy = ” + str(a))</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">CORELS: Certifiably Optimal RulE ListS</a><ul>
+<li><a class="reference internal" href="#quick-start">Quick Start</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Next topic</h4>
   <p class="topless"><a href="CorelsClassifier.html"
                         title="next chapter">CorelsClassifier</a></p>
