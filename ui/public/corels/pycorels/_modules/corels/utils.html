@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>corels.utils &#8212; corels 1.1.24 documentation</title>
+    <title>corels.utils &#8212; corels 1.1.28 documentation</title>
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -23,7 +23,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">corels 1.1.24 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">corels 1.1.28 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>  
@@ -232,7 +232,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load a dataset from a csv file. The csv file must contain n_samples+1 rows, each with n_features+1</span>
 <span class="sd">    columns. The last column of each sample is its prediction class, and the first row of the file</span>
-<span class="sd">    contains the feature names and prediction name (the prediction name is not returned).</span>
+<span class="sd">    contains the feature names and prediction class name.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -248,8 +248,10 @@
 <span class="sd">        The target values for the sample data</span>
 <span class="sd">    </span>
 <span class="sd">    features : list</span>
-<span class="sd">        A list of strings of length n_features. Specifies the names of each</span>
-<span class="sd">        of the features.</span>
+<span class="sd">        A list of strings of length n_features. Specifies the names of each of the features.</span>
+
+<span class="sd">    prediction_name : str</span>
+<span class="sd">        The name of the prediction class</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">import</span> <span class="nn">csv</span>
@@ -266,7 +268,7 @@
     <span class="n">X</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">features</span></div>
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">prediction_name</span></div>
 </pre></div>
 
           </div>
@@ -296,7 +298,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">corels 1.1.24 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">corels 1.1.28 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
