@@ -261,9 +261,6 @@ int main(int argc, char **argv)
   rules_vec = malloc(sizeof(mpz_t) * nrules);
   rule_names = malloc(sizeof(char*) * nrules);
 
-  int min_thresh = min_support * (double)nsamples;
-  int max_thresh = (1.0 - min_support) * (double)nsamples;
-
   // Trimmed number of rules: all rules except those that don't pass the minumum threshold
   int nrules_mine = 0;
 
@@ -282,7 +279,7 @@ int main(int argc, char **argv)
     // If the rule satisfies the threshold requirements, add it to the out file.
     // If it exceeds the maximum threshold, it is still kept for later rule mining
     // If it less than the minimum threshold, don't add it
-    if(ones <= min_thresh) {
+    if((double)ones / (double)nsamples < min_support) {
       mpz_clear(rules_vec[nrules_mine]);
       continue;
     }
@@ -295,7 +292,7 @@ int main(int argc, char **argv)
       strcat(rule_names[nrules_mine], "-not");
     }
     
-    if(ones < max_thresh) {
+    if((double)ones / (double)nsamples <= 1.0 - min_support) {
       fprintf(out_fp, "{%s} %s\n", rule_names[nrules_mine], rules[i]);
       ntotal_rules++;
       
@@ -333,17 +330,17 @@ int main(int argc, char **argv)
       int ones = mpz_popcount(gen_rule);
 
       // Generate the new rule by successive and operations, and check if it has a valid support
-      if(ones > min_thresh) {
+      if((double)ones / (double)nsamples >= min_support) {
         for(int i = 1; i < card; i++) {
           mpz_and(gen_rule, rules_vec[rule_ids[i]], gen_rule);
           ones = mpz_popcount(gen_rule);
-          if(ones <= min_thresh) {
+          if((double)ones / (double)nsamples < min_support) {
             valid = 0;
             break;
           }
         }
 
-        if(valid && ones >= max_thresh)
+        if(valid && (double)ones / (double)nsamples > 1.0 - min_support)
           valid = 0;
       }
       else
