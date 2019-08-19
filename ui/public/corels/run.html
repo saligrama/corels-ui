@@ -312,13 +312,15 @@ window.onload = function() {
     document.getElementById("quickrun").onclick = function(e) {
         e.preventDefault();
 
-        var pos = getPosition(document.getElementById("console")).y - 100;
+        /*var pos = getPosition(document.getElementById("console")).y - 100;
+
+        console.log(pos);*/
 
         var body = document.body;
         var html = document.documentElement;
 
-        body.scrollTop = pos;
-        html.scrollTop = pos;
+        body.scrollTop = 3000;
+        html.scrollTop = 3000;
 
         csv_submit(true);
     }
