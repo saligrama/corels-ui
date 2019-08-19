@@ -112,8 +112,8 @@ function m_alert(e, mes) {
 }
 
 window.onload = function() {
-    var socket = io.connect("https://corels.eecs.harvard.edu/");
-    //var socket = io.connect("localhost:8080/");
+    //var socket = io.connect("https://corels.eecs.harvard.edu/");
+    var socket = io.connect("localhost:8080/");
     var uploader = new SocketIOFileClient(socket);
 
     var running = false;
@@ -178,13 +178,13 @@ window.onload = function() {
         running = false;
     });
 
-    function getCorelsOptions() {
+    function getCorelsOptions(force_default) {
         var data = {};
 
-        data.regularization = document.getElementById("regularization").value;
-        data.max_nodes = document.getElementById("max_nodes").value;
-        data.search_policy = document.getElementById("search_policy").value;
-        data.prefix_map = document.getElementById("prefix_map").value;
+        data.regularization = force_default ? 0.01 : document.getElementById("regularization").value;
+        data.max_nodes = force_default ? 100000000 : document.getElementById("max_nodes").value;
+        data.search_policy = force_default ? "-c 2" : document.getElementById("search_policy").value;
+        data.prefix_map = force_default ? "-p 1" : document.getElementById("prefix_map").value;
         data.verbosity = "";
 
         var checks = document.getElementById("verbosity-wrap").querySelectorAll("input[type=checkbox]");
@@ -228,12 +228,12 @@ window.onload = function() {
             return;
 
         //socket.on("start-run-confirm", function() {
-            var data = getCorelsOptions();
+            var data = getCorelsOptions(force_default);
 
             if(data) {
                 data.make_minor = true;
-                data.min_support = document.getElementById("min_support").value;
-                data.max_card = document.getElementById("max_card").value;
+                data.min_support = force_default ? 0.01 : document.getElementById("min_support").value;
+                data.max_card = force_default ? 1 : document.getElementById("max_card").value;
                 data.mine = 1;
                 data.type = "csv";
                 
@@ -314,8 +314,6 @@ window.onload = function() {
 
         var pos = getPosition(document.getElementById("console")).y - 100;
 
-        console.log(pos);
-
         var body = document.body;
         var html = document.documentElement;
 
@@ -332,7 +330,7 @@ window.onload = function() {
           return;
 
         //socket.on("start-run-confirm", function() {
-            var data = getCorelsOptions();
+            var data = getCorelsOptions(false);
             
             if(data) {
                 var out = document.getElementById("out_file");
