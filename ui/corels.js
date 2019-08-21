@@ -102,12 +102,12 @@ io.on('connection', function(socket) {
       ones = samples.split("1").length - 1
       zeros = samples.split("0").length - 1
       n = ones + zeros;
-      if(reg < (1.0 / n))
+/*      if(reg < (1.0 / n))
         reg = 1.0 / n;
 
       if(reg > (Math.min(ones, zeros) / n))
         reg = Math.min(ones, zeros) / n
-
+*/
       console.log("1s: " + ones + "  0s: " + zeros + "  r: " + reg);
       
       args.push("-r " + reg);
